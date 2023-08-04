@@ -200,7 +200,7 @@ class _ExpectationParser:
                 self._compiler, re.compile(re_string), self.index + 1
             )
         except re.error as error:
-            raise ValueError('Invalid regular expression: ' + error.msg)
+            raise ValueError(f'Invalid regular expression: {error.msg}')
 
 
 class _NegativeCompilationTestSource:
@@ -265,8 +265,7 @@ class _NegativeCompilationTestSource:
             for i in range(len(self._lines))
             if _EXPECT_START.match(self._lines[i])
         )
-        stray = all_expectations - self._parsed_expectations
-        if stray:
+        if stray := all_expectations - self._parsed_expectations:
             self._error(
                 f'Found {len(stray)} stray PW_NC_EXPECT() commands!',
                 *sorted(stray),
@@ -380,8 +379,9 @@ def _main(
     for test in tests:
         tests_by_case[test.case].append(test)
 
-    duplicates = [tests for tests in tests_by_case.values() if len(tests) > 1]
-    if duplicates:
+    if duplicates := [
+        tests for tests in tests_by_case.values() if len(tests) > 1
+    ]:
         print_stderr('There are duplicate negative compilation test cases!')
         print_stderr('The following test cases appear more than once:')
         for tests in duplicates:

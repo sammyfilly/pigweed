@@ -303,8 +303,7 @@ def _exact_cover(*configs: GnConfig) -> Iterator[GnConfig]:
                 pending.append(config_a - config_b)
                 disjoint.append(config_b)
                 break
-            config_c = config_a & config_b
-            if config_c:
+            if config_c := config_a & config_b:
                 pending.append(config_a - config_c)
                 pending.append(config_b - config_c)
                 pending.append(config_c)
@@ -317,8 +316,7 @@ def _exact_cover(*configs: GnConfig) -> Iterator[GnConfig]:
     for values in disjoint:
         config = GnConfig()
         config.values = values
-        public = config.extract_public()
-        if public:
+        if public := config.extract_public():
             yield public
         if config:
             yield config

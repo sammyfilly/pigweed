@@ -84,11 +84,7 @@ class WindowPane(ABC):
         height: Optional[AnyDimension] = None,
         width: Optional[AnyDimension] = None,
     ):
-        if application:
-            self.application = application
-        else:
-            self.application = get_pw_console_app()
-
+        self.application = application if application else get_pw_console_app()
         self._pane_title = pane_title
         self._pane_subtitle: str = ''
 
@@ -223,10 +219,10 @@ class WindowPane(ABC):
     def has_child_container(self, child_container: AnyContainer) -> bool:
         if not child_container:
             return False
-        for container in walk(self.__pt_container__()):
-            if container == child_container:
-                return True
-        return False
+        return any(
+            container == child_container
+            for container in walk(self.__pt_container__())
+        )
 
 
 class FloatingWindowPane(WindowPane):

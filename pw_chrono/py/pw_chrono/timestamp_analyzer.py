@@ -31,12 +31,11 @@ def process_snapshot(serialized_snapshot: bytes):
 
 
 def timestamp_output(timestamps: chrono_pb2.SnapshotTimestamps):
-    output: List[str] = []
     if not timestamps.timestamps:
         return ''
 
     plural = '' if len(timestamps.timestamps) == 1 else 's'
-    output.append(f'Snapshot capture timestamp{plural}')
+    output: List[str] = [f'Snapshot capture timestamp{plural}']
     for timepoint in timestamps.timestamps:
         time = timestamp_snapshot_analyzer(timepoint)
         clock_epoch_type = timepoint.clock_parameters.epoch_type
@@ -61,6 +60,4 @@ def timestamp_snapshot_analyzer(
     )
     elapsed_seconds = ticks * clock_period
 
-    time_delta = datetime.timedelta(seconds=elapsed_seconds)
-
-    return time_delta
+    return datetime.timedelta(seconds=elapsed_seconds)

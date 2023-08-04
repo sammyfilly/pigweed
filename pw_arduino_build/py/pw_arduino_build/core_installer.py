@@ -168,9 +168,7 @@ def install_core(prefix, core_name):
         install_arduino_samd_core(install_prefix, install_dir, cache_dir)
     else:
         raise ArduinoCoreNotSupported(
-            "Invalid core '{}'. Supported cores: {}".format(
-                core_name, ", ".join(supported_cores())
-            )
+            f"""Invalid core '{core_name}'. Supported cores: {", ".join(supported_cores())}"""
         )
 
 
@@ -202,7 +200,7 @@ def install_teensy_core(_install_prefix: str, install_dir: str, cache_dir: str):
 
     if any(not expected_file.is_file() for expected_file in expected_files):
         expected_files_str = "".join(
-            list(f"  {expected_file}\n" for expected_file in expected_files)
+            [f"  {expected_file}\n" for expected_file in expected_files]
         )
 
         raise ArduinoCoreInstallationFailed(

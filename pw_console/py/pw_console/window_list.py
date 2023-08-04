@@ -237,9 +237,8 @@ class WindowList:
 
     def get_pane_titles(self, omit_subtitles=False, use_menu_title=True):
         """Return formatted text for the window pane tab bar."""
-        fragments = []
         separator = ('', ' ')
-        fragments.append(separator)
+        fragments = [separator]
         for pane_index, pane in enumerate(self.active_panes):
             title = pane.menu_title() if use_menu_title else pane.pane_title()
             subtitle = pane.pane_subtitle()
@@ -253,22 +252,21 @@ class WindowList:
                 else 'class:window-tab-inactive'
             )
             if pane.extra_tab_style:
-                tab_style += ' ' + pane.extra_tab_style
+                tab_style += f' {pane.extra_tab_style}'
 
-            fragments.append(
+            fragments.extend(
                 (
-                    # Style
-                    tab_style,
-                    # Text
-                    text,
-                    # Mouse handler
-                    functools.partial(
-                        pw_console_mouse_handlers.on_click,
-                        functools.partial(self.switch_to_tab, pane_index),
+                    (
+                        tab_style,
+                        text,
+                        functools.partial(
+                            pw_console_mouse_handlers.on_click,
+                            functools.partial(self.switch_to_tab, pane_index),
+                        ),
                     ),
+                    separator,
                 )
             )
-            fragments.append(separator)
         return fragments
 
     def switch_to_tab(self, index: int):
@@ -361,12 +359,12 @@ class WindowList:
             self.rebalance_window_heights()
 
     def mouse_handler(self, mouse_event: MouseEvent):
-        mouse_position = mouse_event.position
-
         if (
             mouse_event.event_type == MouseEventType.MOUSE_MOVE
             and mouse_event.button == MouseButton.LEFT
         ):
+            mouse_position = mouse_event.position
+
             self.mouse_resize(mouse_position.x, mouse_position.y)
         elif mouse_event.event_type == MouseEventType.MOUSE_UP:
             self.stop_resize()
@@ -384,7 +382,7 @@ class WindowList:
         if self.display_mode == DisplayMode.STACK:
             content_split = WindowListHSplit(
                 self,
-                list(pane for pane in self.active_panes if pane.show_pane),
+                [pane for pane in self.active_panes if pane.show_pane],
                 height=lambda: self.height,
                 width=lambda: self.width,
             )
@@ -420,7 +418,7 @@ class WindowList:
             dont_extend_width=False,
         )
 
-        tab_toolbar = VSplit(
+        return VSplit(
             [
                 tab_bar_window,
                 spacer,
@@ -429,7 +427,6 @@ class WindowList:
             height=1,
             align=HorizontalAlign.LEFT,
         )
-        return tab_toolbar
 
     def empty(self) -> bool:
         return len(self.active_panes) == 0
@@ -454,11 +451,10 @@ class WindowList:
         existing_pane_index = self.pane_index(existing_pane)
         if existing_pane_index is not None:
             self.active_panes.insert(new_pane, existing_pane_index + 1)
+        elif add_at_beginning:
+            self.active_panes.appendleft(new_pane)
         else:
-            if add_at_beginning:
-                self.active_panes.appendleft(new_pane)
-            else:
-                self.active_panes.append(new_pane)
+            self.active_panes.append(new_pane)
 
         self.refresh_ui()
 
@@ -495,14 +491,12 @@ class WindowList:
 
     def enlarge_pane(self):
         """Enlarge the currently focused window pane."""
-        pane = self.get_current_active_pane()
-        if pane:
+        if pane := self.get_current_active_pane():
             self.adjust_pane_size(pane, _WINDOW_HEIGHT_ADJUST)
 
     def shrink_pane(self):
         """Shrink the currently focused window pane."""
-        pane = self.get_current_active_pane()
-        if pane:
+        if pane := self.get_current_active_pane():
             self.adjust_pane_size(pane, -_WINDOW_HEIGHT_ADJUST)
 
     def mouse_resize(self, _xpos, ypos) -> None:
@@ -532,9 +526,7 @@ class WindowList:
         next_pane = HSplit(
             [], height=Dimension(preferred=10), width=Dimension(preferred=10)
         )  # type: ignore
-        # Try to get the next visible pane to subtract a weight value from.
-        next_visible_pane = self._get_next_visible_pane_after(pane)
-        if next_visible_pane:
+        if next_visible_pane := self._get_next_visible_pane_after(pane):
             next_pane = next_visible_pane
 
         # If the last pane is selected, and there are at least 2 panes, make

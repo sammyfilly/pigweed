@@ -49,7 +49,7 @@ class TestGnuBuildId(unittest.TestCase):
                 '-I../pw_polyfill/public',
                 '-I../pw_preprocessor/public',
                 '-I../pw_span/public',
-                '--sysroot=%s' % sysroot,
+                f'--sysroot={sysroot}',
                 '-std=c++17',
                 '-fuse-ld=lld',
                 '-Wl,-Tadd_build_id_to_default_linker_script.ld',

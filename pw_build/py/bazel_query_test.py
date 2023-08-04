@@ -306,19 +306,12 @@ class TestWorkspace(unittest.TestCase):
     @mock.patch('subprocess.run')
     def test_workspace_get_rules(self, mock_run):
         """Tests querying a workspace for Bazel rules."""
-        attrs = []
-
-        # `bazel query //... --output=package
-        attrs.append(
+        attrs = [
             {
                 'stdout.decode.return_value': '''
 foo/pkg1
 bar/pkg2'''
-            }
-        )
-
-        # bazel query buildfiles(//foo:*) --output=xml
-        attrs.append(
+            },
             {
                 'stdout.decode.return_value': '''
 <query version="2">
@@ -326,11 +319,7 @@ bar/pkg2'''
         <visibility-label name="//visibility:public"/>
     </source-file>
 </query>'''
-            }
-        )
-
-        # bazel query buildfiles(//bar:*) --output=xml
-        attrs.append(
+            },
             {
                 'stdout.decode.return_value': '''
 <query version="2">
@@ -338,11 +327,7 @@ bar/pkg2'''
         <visibility-label name="//visibility:private"/>
     </source-file>
 </query>'''
-            }
-        )
-
-        # bazel cquery kind(some_kind, //...) --output=jsonproto
-        attrs.append(
+            },
             {
                 'stdout.decode.return_value': '''
 {
@@ -369,8 +354,9 @@ bar/pkg2'''
     }
   ]
 }'''
-            }
-        )
+            },
+        ]
+
         mock_run.side_effect = [mock.MagicMock(**attr) for attr in attrs]
         with TemporaryDirectory() as tmp:
             workspace = BazelWorkspace(tmp)

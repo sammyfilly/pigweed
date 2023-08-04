@@ -118,9 +118,7 @@ class ArduinoBuilder:
 
         if not os.path.exists(self.hardware_path):
             raise FileNotFoundError(
-                "Arduino package path '{}' does not exist.".format(
-                    self.hardware_path
-                )
+                f"Arduino package path '{self.hardware_path}' does not exist."
             )
 
         # Set and check for valid package name
@@ -138,7 +136,7 @@ class ArduinoBuilder:
             # TODO(tonymd): On Windows concatenating "/" may not work
             possible_alternatives = [
                 d.replace(self.hardware_path + os.sep, "", 1)
-                for d in glob.glob(self.hardware_path + "/*/*")
+                for d in glob.glob(f"{self.hardware_path}/*/*")
             ]
             _LOG.error("\n".join(possible_alternatives))
             sys.exit(1)
@@ -171,7 +169,7 @@ class ArduinoBuilder:
         self.selected_board = board_name
 
         # Load default menu options for a selected board.
-        if not self.selected_board in self.board.keys():
+        if self.selected_board not in self.board.keys():
             _LOG.error("Error board: '%s' not supported.", self.selected_board)
             # TODO(tonymd): Print supported boards here
             sys.exit(1)
@@ -258,7 +256,7 @@ class ArduinoBuilder:
             self.selected_board
         ].items():
             for name, var in self.board[self.selected_board].items():
-                starting_key = "{}.{}.".format(menu_key, menu_dict["name"])
+                starting_key = f'{menu_key}.{menu_dict["name"]}.'
                 if name.startswith(starting_key):
                     new_var_name = name.replace(starting_key, "", 1)
                     self.menu_options["selected"][new_var_name] = var
@@ -268,12 +266,10 @@ class ArduinoBuilder:
             _LOG.error("Error: '%s' is not a valid menu option.", moption)
             return False
 
-        # Override default menu option with new value.
-        menu_match_result = self.MENU_OPTION_REGEX.match(moption)
-        if menu_match_result:
+        if menu_match_result := self.MENU_OPTION_REGEX.match(moption):
             menu_match = menu_match_result.groupdict()
             menu_value = menu_match["menu_option_value"]
-            menu_key = "menu.{}".format(menu_match["menu_option_name"])
+            menu_key = f'menu.{menu_match["menu_option_name"]}'
             self.menu_options["default_board_values"][self.selected_board][
                 menu_key
             ]["name"] = menu_value
@@ -298,7 +294,7 @@ class ArduinoBuilder:
             if self.build_project_name:
                 current_board["build.project_name"] = self.build_project_name
                 # {archive_file} is the final *.elf
-                archive_file = "{}.elf".format(self.build_project_name)
+                archive_file = f"{self.build_project_name}.elf"
                 current_board["archive_file"] = archive_file
                 # {archive_file_path} is the final core.a archive
                 if self.build_path:
@@ -408,19 +404,15 @@ class ArduinoBuilder:
         if it doesn't already exist. Assumes menu options are added in the order
         specified in boards.txt. The first value for a menu key is the default.
         """
-        # Check if key is a menu option
-        # e.g. menu.usb.serial
-        #      menu.usb.serial.build.usbtype
-        menu_match_result = re.match(
+        if menu_match_result := re.match(
             r'^menu\.'  # starts with "menu"
             r'(?P<menu_option_name>[^.]+)\.'  # first token after .
             r'(?P<menu_option_value>[^.]+)'  # second token after .
             r'(\.(?P<rest>.+))?',  # optionally any trailing tokens after a .
             key,
-        )
-        if menu_match_result:
+        ):
             menu_match = menu_match_result.groupdict()
-            current_menu_key = "menu.{}".format(menu_match["menu_option_name"])
+            current_menu_key = f'menu.{menu_match["menu_option_name"]}'
             # If this is the first menu option seen for current_board_name, save
             # as the default.
             if (
@@ -441,7 +433,7 @@ class ArduinoBuilder:
         definitions from variable_lookup_source.
         """
         new_line = line
-        for current_var_match in self.INTERPOLATED_VARIABLE_REGEX.findall(line):
+        for current_var_match in self.INTERPOLATED_VARIABLE_REGEX.findall(new_line):
             # {build.flags.c} --> build.flags.c
             current_var = current_var_match.strip("{}")
 
@@ -522,19 +514,16 @@ class ArduinoBuilder:
                     ):
                         for version_path in version_paths:
                             version_string = os.path.basename(version_path)
-                            var_name = "runtime.tools.{}-{}.path".format(
-                                tool_folder, version_string
-                            )
+                            var_name = f"runtime.tools.{tool_folder}-{version_string}.path"
                             self.tools_variables[var_name] = os.path.join(
                                 path, version_string
                             )
-                        var_name = "runtime.tools.{}.path".format(tool_folder)
+                        var_name = f"runtime.tools.{tool_folder}.path"
                         self.tools_variables[var_name] = os.path.join(
                             path, os.path.basename(version_paths[-1])
                         )
-                    # Else set toolpath to path.
                     else:
-                        var_name = "runtime.tools.{}.path".format(tool_folder)
+                        var_name = f"runtime.tools.{tool_folder}.path"
                         self.tools_variables[var_name] = path
 
         _LOG.debug("TOOL VARIABLES: %s", _pretty_format(self.tools_variables))
@@ -560,19 +549,16 @@ class ArduinoBuilder:
                 value, self.board[self.selected_board]
             )
 
-        # Check for build.variant variable
-        # This will be set in selected board after menu options substitution
-        build_variant = self.board[self.selected_board].get(
+        if build_variant := self.board[self.selected_board].get(
             "build.variant", None
-        )
-        if build_variant:
+        ):
             # Set build.variant.path
             bvp = os.path.join(self.package_path, "variants", build_variant)
             self.build_variant_path = bvp
             self.board[self.selected_board]["build.variant.path"] = bvp
             # Add the variant folder as an include directory
             # (used in stm32l4 core)
-            self.variant_includes = "-I{}".format(bvp)
+            self.variant_includes = f"-I{bvp}"
 
         _LOG.debug("PLATFORM INITIAL: %s", _pretty_format(self.platform))
 
@@ -608,13 +594,9 @@ class ArduinoBuilder:
         max_string_length = [0, 0]
 
         for key_name, description in self.board[self.selected_board].items():
-            menu_match_result = self.MENU_OPTION_REGEX.match(key_name)
-            if menu_match_result:
+            if menu_match_result := self.MENU_OPTION_REGEX.match(key_name):
                 menu_match = menu_match_result.groupdict()
-                name = "menu.{}.{}".format(
-                    menu_match["menu_option_name"],
-                    menu_match["menu_option_value"],
-                )
+                name = f'menu.{menu_match["menu_option_name"]}.{menu_match["menu_option_value"]}'
                 if len(name) > max_string_length[0]:
                     max_string_length[0] = len(name)
                 if len(description) > max_string_length[1]:
@@ -630,7 +612,7 @@ class ArduinoBuilder:
         for key_name, value in self.menu_options["default_board_values"][
             self.selected_board
         ].items():
-            full_key = key_name + "." + value["name"]
+            full_key = f"{key_name}." + value["name"]
             if len(full_key) > max_string_length[0]:
                 max_string_length[0] = len(full_key)
             if len(value["description"]) > max_string_length[1]:
@@ -644,8 +626,7 @@ class ArduinoBuilder:
         compile_binary = None
         rest_of_line = compile_line
 
-        compile_binary_match = re.search(r'^("[^"]+") ', compile_line)
-        if compile_binary_match:
+        if compile_binary_match := re.search(r'^("[^"]+") ', compile_line):
             compile_binary = compile_binary_match[1]
             rest_of_line = compile_line.replace(compile_binary_match[0], "", 1)
 
@@ -666,8 +647,7 @@ class ArduinoBuilder:
         return line
 
     def _get_tool_name(self, line):
-        tool_match_result = self.TOOL_NAME_REGEX.match(line)
-        if tool_match_result:
+        if tool_match_result := self.TOOL_NAME_REGEX.match(line):
             return tool_match_result[1]
         return False
 
@@ -698,32 +678,30 @@ class ArduinoBuilder:
 
             # Check for namespace.variable
             #   eg: 'tools.stm32CubeProg.cmd'
-            possible_var_name = "{}.{}".format(namespace, v_raw_name)
+            possible_var_name = f"{namespace}.{v_raw_name}"
             result = self._get_platform_variable(possible_var_name)
             # Check for os overriden variable
             #   eg:
             #     ('tools.stm32CubeProg.cmd', 'stm32CubeProg.sh'),
             #     ('tools.stm32CubeProg.cmd.windows', 'stm32CubeProg.bat'),
-            possible_var_name = "{}.{}.{}".format(
-                namespace, v_raw_name, arduino_runtime_os_string()
-            )
-            os_override_result = self._get_platform_variable(possible_var_name)
-
-            if os_override_result:
+            possible_var_name = f"{namespace}.{v_raw_name}.{arduino_runtime_os_string()}"
+            if os_override_result := self._get_platform_variable(
+                possible_var_name
+            ):
                 line = line.replace(var, os_override_result)
             elif result:
                 line = line.replace(var, result)
-            # Check for variable at top level?
-            # elif self._get_platform_variable(v_raw_name):
-            #     line = line.replace(self._get_platform_variable(v_raw_name),
-            #                         result)
+                # Check for variable at top level?
+                # elif self._get_platform_variable(v_raw_name):
+                #     line = line.replace(self._get_platform_variable(v_raw_name),
+                #                         result)
         return line
 
     def get_upload_line(self, tool_name, serial_port=False):
         """TODO(tonymd) Add docstring."""
         # TODO(tonymd): Error if tool_name does not exist
-        tool_namespace = "tools.{}".format(tool_name)
-        pattern = "tools.{}.upload.pattern".format(tool_name)
+        tool_namespace = f"tools.{tool_name}"
+        pattern = f"tools.{tool_name}.upload.pattern"
 
         if not self._get_platform_variable(pattern):
             _LOG.error("Error: upload tool '%s' does not exist.", tool_name)
@@ -769,8 +747,7 @@ class ArduinoBuilder:
 
     def get_objcopy_binary(self):
         objcopy_step_name = self.get_objcopy_step_names()[0]
-        objcopy_binary = self._get_binary_path(objcopy_step_name)
-        return objcopy_binary
+        return self._get_binary_path(objcopy_step_name)
 
     def get_ar_binary(self):
         return self._get_binary_path("recipe.ar.pattern")
@@ -814,9 +791,7 @@ class ArduinoBuilder:
                 new_compiler += ".exe"
 
             if os.path.isfile(new_compiler):
-                replacement_compile_line = "\"{}\" {}".format(
-                    new_compiler, line
-                )
+                replacement_compile_line = f'\"{new_compiler}\" {line}'
 
         return replacement_compile_line
 
@@ -830,14 +805,9 @@ class ArduinoBuilder:
         compile_line = self._strip_includes_source_file_object_file_vars(
             compile_line
         )
-        compile_line += " -I{}".format(
-            self.board[self.selected_board]["build.core.path"]
-        )
+        compile_line += f' -I{self.board[self.selected_board]["build.core.path"]}'
 
-        compile_line = self.replace_compile_binary_with_override_path(
-            compile_line
-        )
-        return compile_line
+        return self.replace_compile_binary_with_override_path(compile_line)
 
     def get_s_compile_line(self):
         _LOG.debug(
@@ -849,14 +819,9 @@ class ArduinoBuilder:
         compile_line = self._strip_includes_source_file_object_file_vars(
             compile_line
         )
-        compile_line += " -I{}".format(
-            self.board[self.selected_board]["build.core.path"]
-        )
+        compile_line += f' -I{self.board[self.selected_board]["build.core.path"]}'
 
-        compile_line = self.replace_compile_binary_with_override_path(
-            compile_line
-        )
-        return compile_line
+        return self.replace_compile_binary_with_override_path(compile_line)
 
     def get_ar_compile_line(self):
         _LOG.debug(
@@ -883,14 +848,9 @@ class ArduinoBuilder:
         compile_line = self._strip_includes_source_file_object_file_vars(
             compile_line
         )
-        compile_line += " -I{}".format(
-            self.board[self.selected_board]["build.core.path"]
-        )
+        compile_line += f' -I{self.board[self.selected_board]["build.core.path"]}'
 
-        compile_line = self.replace_compile_binary_with_override_path(
-            compile_line
-        )
-        return compile_line
+        return self.replace_compile_binary_with_override_path(compile_line)
 
     def get_link_line(self):
         _LOG.debug(
@@ -906,12 +866,11 @@ class ArduinoBuilder:
         return compile_line
 
     def get_objcopy_step_names(self):
-        names = [
+        return [
             name
             for name, line in self.platform.items()
             if self.OBJCOPY_STEP_NAME_REGEX.match(name)
         ]
-        return names
 
     def get_objcopy_steps(self) -> List[str]:
         lines = [
@@ -932,7 +891,7 @@ class ArduinoBuilder:
         #   recipe.objcopy.eep.pattern
         #   recipe.objcopy.hex.pattern
 
-        pattern = "recipe.objcopy.{}.pattern".format(suffix)
+        pattern = f"recipe.objcopy.{suffix}.pattern"
         objcopy_step_names = self.get_objcopy_step_names()
 
         objcopy_suffixes = [
@@ -972,11 +931,8 @@ class ArduinoBuilder:
     # TODO(tonymd): Rename this to get_hooks(hook_name, step).
     # TODO(tonymd): Add a list-hooks and or run-hooks command
     def get_postbuild_line(self, step_number):
-        line = self.platform[
-            "recipe.hooks.postbuild.{}.pattern".format(step_number)
-        ]
-        line = self.replace_command_args_with_compiler_override_path(line)
-        return line
+        line = self.platform[f"recipe.hooks.postbuild.{step_number}.pattern"]
+        return self.replace_command_args_with_compiler_override_path(line)
 
     def get_prebuild_steps(self) -> List[str]:
         # Teensy core uses recipe.hooks.sketch.prebuild.1.pattern
@@ -1092,8 +1048,7 @@ class ArduinoBuilder:
             return []
 
         folder_patterns = ["*"]
-        if self.library_names:
-            folder_patterns = self.library_names
+        folder_patterns = self.library_names
 
         library_folders = OrderedDict()
         for library_dir in self.library_path:
@@ -1117,11 +1072,8 @@ class ArduinoBuilder:
         return [Path(lib).as_posix() for lib in self.library_folders()]
 
     def library_includes(self):
-        include_args = []
         library_folders = self.library_folders()
-        for lib_dir in library_folders:
-            include_args.append("-I{}".format(os.path.relpath(lib_dir)))
-        return include_args
+        return [f"-I{os.path.relpath(lib_dir)}" for lib_dir in library_folders]
 
     def library_files(self, pattern, only_library_name=None):
         sources = []
@@ -1131,9 +1083,11 @@ class ArduinoBuilder:
                 lf for lf in self.library_folders() if only_library_name in lf
             ]
         for lib_dir in library_folders:
-            for file_path in file_operations.find_files(lib_dir, [pattern]):
-                if not file_path.startswith("examples"):
-                    sources.append((Path(lib_dir) / file_path).as_posix())
+            sources.extend(
+                (Path(lib_dir) / file_path).as_posix()
+                for file_path in file_operations.find_files(lib_dir, [pattern])
+                if not file_path.startswith("examples")
+            )
         return sources
 
     def library_c_files(self):
@@ -1149,12 +1103,12 @@ class ArduinoBuilder:
         return self.board[self.selected_board]["build.core.path"]
 
     def core_files(self, pattern):
-        sources = []
-        for file_path in file_operations.find_files(
-            self.get_core_path(), [pattern]
-        ):
-            sources.append(os.path.join(self.get_core_path(), file_path))
-        return sources
+        return [
+            os.path.join(self.get_core_path(), file_path)
+            for file_path in file_operations.find_files(
+                self.get_core_path(), [pattern]
+            )
+        ]
 
     def core_c_files(self):
         return self.core_files("**/*.c")
@@ -1171,10 +1125,12 @@ class ArduinoBuilder:
     def variant_files(self, pattern):
         sources = []
         if self.build_variant_path:
-            for file_path in file_operations.find_files(
-                self.get_variant_path(), [pattern]
-            ):
-                sources.append(os.path.join(self.get_variant_path(), file_path))
+            sources.extend(
+                os.path.join(self.get_variant_path(), file_path)
+                for file_path in file_operations.find_files(
+                    self.get_variant_path(), [pattern]
+                )
+            )
         return sources
 
     def variant_c_files(self):
@@ -1187,15 +1143,14 @@ class ArduinoBuilder:
         return self.variant_files("**/*.cpp")
 
     def project_files(self, pattern):
-        sources = []
-        for file_path in file_operations.find_files(
-            self.project_path, [pattern]
-        ):
-            if not file_path.startswith(
-                "examples"
-            ) and not file_path.startswith("libraries"):
-                sources.append(file_path)
-        return sources
+        return [
+            file_path
+            for file_path in file_operations.find_files(
+                self.project_path, [pattern]
+            )
+            if not file_path.startswith("examples")
+            and not file_path.startswith("libraries")
+        ]
 
     def project_c_files(self):
         return self.project_files("**/*.c")

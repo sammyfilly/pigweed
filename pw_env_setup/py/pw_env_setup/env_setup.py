@@ -105,9 +105,8 @@ def _which(
             for ext in exts:
                 if executable + ext in entries:
                     return os.path.join(path, executable + ext)
-        else:
-            if executable in entries:
-                return os.path.join(path, executable)
+        elif executable in entries:
+            return os.path.join(path, executable)
 
     return None
 
@@ -133,9 +132,9 @@ class _Result:
         if duration > 60:
             minutes = int(duration // 60)
             duration %= 60
-            duration_parts.append('{}m'.format(minutes))
+            duration_parts.append(f'{minutes}m')
         duration_parts.append('{:.1f}s'.format(duration))
-        return '{} ({})'.format(self._status, ''.join(duration_parts))
+        return f"{self._status} ({''.join(duration_parts)})"
 
     def messages(self):
         return self._messages
@@ -269,8 +268,8 @@ class EnvSetup(object):
             if pat:
                 matches = glob.glob(pat)
                 if not matches:
-                    warning = 'pattern "{}" matched 0 files'.format(pat)
-                    warnings.append('warning: {}'.format(warning))
+                    warning = f'pattern "{pat}" matched 0 files'
+                    warnings.append(f'warning: {warning}')
                     if self._strict:
                         raise ConfigError(warning)
 
@@ -315,9 +314,7 @@ class EnvSetup(object):
 
         if self._optional_submodules and self._required_submodules:
             raise ValueError(
-                '{} contains both "optional_submodules" and '
-                '"required_submodules", but these options are mutually '
-                'exclusive'.format(self._config_file_name)
+                f'{self._config_file_name} contains both "optional_submodules" and "required_submodules", but these options are mutually exclusive'
             )
 
         self._cipd_package_file.extend(
@@ -348,7 +345,7 @@ class EnvSetup(object):
 
         for target in _assert_sequence(virtualenv.pop('gn_targets', ())):
             self._virtualenv_gn_targets.append(
-                virtualenv_setup.GnTarget('{}#{}'.format(root, target))
+                virtualenv_setup.GnTarget(f'{root}#{target}')
             )
 
         self._virtualenv_gn_args = _assert_sequence(
@@ -388,16 +385,12 @@ class EnvSetup(object):
 
         if virtualenv:
             raise ConfigFileError(
-                'unrecognized option in {}: "virtualenv.{}"'.format(
-                    self._config_file_name, next(iter(virtualenv))
-                )
+                f'unrecognized option in {self._config_file_name}: "virtualenv.{next(iter(virtualenv))}"'
             )
 
         if config:
             raise ConfigFileError(
-                'unrecognized option in {}: "{}"'.format(
-                    self._config_file_name, next(iter(config))
-                )
+                f'unrecognized option in {self._config_file_name}: "{next(iter(config))}"'
             )
 
     def _check_submodule_presence(self):
@@ -435,10 +428,7 @@ class EnvSetup(object):
             print('', file=sys.stderr)
 
             for miss in sorted(missing):
-                print(
-                    '    git submodule update --init {}'.format(miss),
-                    file=sys.stderr,
-                )
+                print(f'    git submodule update --init {miss}', file=sys.stderr)
             print('', file=sys.stderr)
 
             if self._required_submodules:
@@ -456,7 +446,7 @@ class EnvSetup(object):
                 )
 
             print('list in the environment config JSON file:', file=sys.stderr)
-            print('    {}'.format(self._config_file_name), file=sys.stderr)
+            print(f'    {self._config_file_name}', file=sys.stderr)
             print('', file=sys.stderr)
 
             raise MissingSubmodulesError(', '.join(sorted(missing)))
@@ -562,7 +552,7 @@ Then use `set +x` to go back to normal.
 
             self._env.echo(result.status_str())
             for message in result.messages():
-                sys.stderr.write('{}\n'.format(message))
+                sys.stderr.write(f'{message}\n')
                 self._env.echo(message)
 
             if not result.ok():
@@ -572,9 +562,7 @@ Then use `set +x` to go back to normal.
             log_dir = os.path.join(self._install_dir, 'logs')
             if not os.path.isdir(log_dir):
                 os.makedirs(log_dir)
-            actions_json = os.path.join(
-                log_dir, 'post-{}.json'.format(name.replace(' ', '_'))
-            )
+            actions_json = os.path.join(log_dir, f"post-{name.replace(' ', '_')}.json")
             with open(actions_json, 'w') as outs:
                 self._env.json(outs)
 
@@ -608,8 +596,7 @@ Then use `set +x` to go back to normal.
             self._env.write(outs)
 
         deactivate = os.path.join(
-            self._install_dir,
-            'deactivate{}'.format(os.path.splitext(self._shell_file)[1]),
+            self._install_dir, f'deactivate{os.path.splitext(self._shell_file)[1]}'
         )
         with open(deactivate, 'w') as outs:
             self._env.write_deactivate(outs)
@@ -741,33 +728,34 @@ Then use `set +x` to go back to normal.
                 shutil.copyfile(new_python3, python3_copy)
             new_python3 = python3_copy
 
-        if not requirements and not self._virtualenv_gn_targets:
+        if requirements or self._virtualenv_gn_targets:
+            return (
+                result(_Result.Status.FAILED)
+                if not virtualenv_setup.install(
+                    project_root=self._project_root,
+                    venv_path=self._virtualenv_root,
+                    requirements=requirements,
+                    constraints=constraints,
+                    pip_install_find_links=self._virtualenv_pip_install_find_links,
+                    pip_install_offline=self._virtualenv_pip_install_offline,
+                    pip_install_require_hashes=(
+                        self._virtualenv_pip_install_require_hashes
+                    ),
+                    pip_install_disable_cache=(
+                        self._virtualenv_pip_install_disable_cache
+                    ),
+                    gn_args=self._virtualenv_gn_args,
+                    gn_targets=self._virtualenv_gn_targets,
+                    gn_out_dir=self._virtualenv_gn_out_dir,
+                    python=new_python3,
+                    env=self._env,
+                    system_packages=self._virtualenv_system_packages,
+                    use_pinned_pip_packages=self._use_pinned_pip_packages,
+                )
+                else result(_Result.Status.DONE)
+            )
+        else:
             return result(_Result.Status.SKIPPED)
-
-        if not virtualenv_setup.install(
-            project_root=self._project_root,
-            venv_path=self._virtualenv_root,
-            requirements=requirements,
-            constraints=constraints,
-            pip_install_find_links=self._virtualenv_pip_install_find_links,
-            pip_install_offline=self._virtualenv_pip_install_offline,
-            pip_install_require_hashes=(
-                self._virtualenv_pip_install_require_hashes
-            ),
-            pip_install_disable_cache=(
-                self._virtualenv_pip_install_disable_cache
-            ),
-            gn_args=self._virtualenv_gn_args,
-            gn_targets=self._virtualenv_gn_targets,
-            gn_out_dir=self._virtualenv_gn_out_dir,
-            python=new_python3,
-            env=self._env,
-            system_packages=self._virtualenv_system_packages,
-            use_pinned_pip_packages=self._use_pinned_pip_packages,
-        ):
-            return result(_Result.Status.FAILED)
-
-        return result(_Result.Status.DONE)
 
     def pw_package(self, unused_spin):
         """Install "default" pw packages."""
@@ -784,10 +772,10 @@ Then use `set +x` to go back to normal.
             return result(_Result.Status.SKIPPED)
 
         for pkg in self._pw_packages:
-            print('installing {}'.format(pkg))
+            print(f'installing {pkg}')
             cmd = ['pw', 'package', 'install', pkg]
 
-            log = os.path.join(pkg_dir, '{}.log'.format(pkg))
+            log = os.path.join(pkg_dir, f'{pkg}.log')
             try:
                 with open(log, 'w') as outs, self._env():
                     print(*cmd, file=outs)
@@ -941,9 +929,7 @@ def parse(argv=None):
         action='store_false',
     )
 
-    args = parser.parse_args(argv)
-
-    return args
+    return parser.parse_args(argv)
 
 
 def main():

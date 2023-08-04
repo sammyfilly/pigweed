@@ -137,7 +137,7 @@ def generate_report(
     # llvm-cov export does not create an output file, so we mimic it by creating
     # the directory structure and writing to file outself after we run the
     # command.
-    if format_type in ['lcov', 'json']:
+    if format_type in {'lcov', 'json'}:
         export_output_path = (
             output_dir / 'report.lcov'
             if format_type == 'lcov'
@@ -147,7 +147,7 @@ def generate_report(
 
     # Build the command to the llvm-cov subtool based on provided arguments.
     command = [str(llvm_cov_path)]
-    if format_type in ['html', 'text']:
+    if format_type in {'html', 'text'}:
         command += [
             'show',
             '--format',
@@ -208,7 +208,7 @@ def generate_report(
     _LOG.info('')
 
     # Generate the coverage report by invoking the command.
-    if format_type in ['html', 'text']:
+    if format_type in {'html', 'text'}:
         output = subprocess.run(command)
         if output.returncode != 0:
             return output.returncode
@@ -222,7 +222,7 @@ def generate_report(
     # Generate the depfile that describes the dependency on the test binaries
     # used to create the report output.
     depfile_target = Path('.')
-    if format_type in ['lcov', 'json']:
+    if format_type in {'lcov', 'json'}:
         depfile_target = export_output_path
     elif format_type == 'text':
         depfile_target = output_dir / 'index.txt'

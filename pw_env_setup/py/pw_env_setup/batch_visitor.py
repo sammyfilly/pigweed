@@ -47,7 +47,7 @@ class BatchVisitor(object):  # pylint: disable=useless-object-inheritance
 
             env.accept(self)
 
-            outs.write(':{}\n'.format(_SCRIPT_END_LABEL))
+            outs.write(f':{_SCRIPT_END_LABEL}\n')
 
         finally:
             self._replacements = ()
@@ -57,7 +57,7 @@ class BatchVisitor(object):  # pylint: disable=useless-object-inheritance
         value = action.value
         for var, replacement in self._replacements:
             if var != action.name:
-                value = value.replace(replacement, '%{}%'.format(var))
+                value = value.replace(replacement, f'%{var}%')
         return value
 
     def visit_set(self, set):  # pylint: disable=redefined-builtin
@@ -79,14 +79,14 @@ class BatchVisitor(object):  # pylint: disable=useless-object-inheritance
 
     def visit_prepend(self, prepend):
         value = self._apply_replacements(prepend)
-        value = self._join(value, '%{}%'.format(prepend.name))
+        value = self._join(value, f'%{prepend.name}%')
         self._outs.write(
             'set {name}={value}\n'.format(name=prepend.name, value=value)
         )
 
     def visit_append(self, append):
         value = self._apply_replacements(append)
-        value = self._join('%{}%'.format(append.name), value)
+        value = self._join(f'%{append.name}%', value)
         self._outs.write(
             'set {name}={value}\n'.format(name=append.name, value=value)
         )
@@ -96,24 +96,22 @@ class BatchVisitor(object):  # pylint: disable=useless-object-inheritance
             if not echo.value:
                 self._outs.write('echo.\n')
             else:
-                self._outs.write('echo {}\n'.format(echo.value))
+                self._outs.write(f'echo {echo.value}\n')
         else:
-            self._outs.write('<nul set /p="{}"\n'.format(echo.value))
+            self._outs.write(f'<nul set /p="{echo.value}"\n')
 
     def visit_comment(self, comment):
         for line in comment.value.splitlines():
-            self._outs.write(':: {}\n'.format(line))
+            self._outs.write(f':: {line}\n')
 
     def visit_command(self, command):
         # TODO(mohrr) use shlex.quote here?
-        self._outs.write('{}\n'.format(' '.join(command.command)))
+        self._outs.write(f"{' '.join(command.command)}\n")
         if not command.exit_on_error:
             return
 
         # Assume failing command produced relevant output.
-        self._outs.write(
-            'if %ERRORLEVEL% neq 0 goto {}\n'.format(_SCRIPT_END_LABEL)
-        )
+        self._outs.write(f'if %ERRORLEVEL% neq 0 goto {_SCRIPT_END_LABEL}\n')
 
     def visit_doctor(self, doctor):
         self._outs.write('if "%PW_ACTIVATE_SKIP_CHECKS%"=="" (\n')

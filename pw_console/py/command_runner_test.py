@@ -44,12 +44,10 @@ def _create_console_app(log_pane_count=2):
 
     console_app.prefs.reset_config()
 
-    # Setup log panes
-    loggers = {}
-    for i in range(log_pane_count):
-        loggers['LogPane-{}'.format(i)] = [
-            logging.getLogger('test_log{}'.format(i))
-        ]
+    loggers = {
+        f'LogPane-{i}': [logging.getLogger(f'test_log{i}')]
+        for i in range(log_pane_count)
+    }
     for window_title, logger_instances in loggers.items():
         console_app.add_log_handler(window_title, logger_instances)
 
@@ -59,7 +57,7 @@ def _create_console_app(log_pane_count=2):
 def window_pane_titles(window_manager):
     return [
         [
-            pane.pane_title() + ' - ' + pane.pane_subtitle()
+            f'{pane.pane_title()} - {pane.pane_subtitle()}'
             for pane in window_list.active_panes
         ]
         for window_list in window_manager.window_lists

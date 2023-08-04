@@ -151,9 +151,7 @@ class QuitDialog(ConditionalContainer):
         # Default button style
         button_style = 'class:toolbar-button-inactive'
 
-        fragments = [('', self.exit_message), separator_text]
-        fragments.append(('', '\n'))
-
+        fragments = [('', self.exit_message), separator_text, ('', '\n')]
         # Cancel button
         fragments.extend(
             to_keybind_indicator(

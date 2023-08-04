@@ -58,27 +58,22 @@ class TableView:
     def _width_of_justified_fields(self):
         """Calculate the width of all columns except LAST_TABLE_COLUMN_NAMES."""
         padding_width = len(self.column_padding)
-        used_width = sum(
-            [
-                width + padding_width
-                for key, width in self.column_widths.items()
-                if key not in TableView.LAST_TABLE_COLUMN_NAMES
-            ]
+        return sum(
+            width + padding_width
+            for key, width in self.column_widths.items()
+            if key not in TableView.LAST_TABLE_COLUMN_NAMES
         )
-        return used_width
 
     def _ordered_column_widths(self):
         """Return each column and width in the preferred order."""
         if self.prefs.column_order:
             # Get ordered_columns
             columns = copy.copy(self.column_widths)
-            ordered_columns = {}
-
-            for column_name in self.prefs.column_order:
-                # If valid column name
-                if column_name in columns:
-                    ordered_columns[column_name] = columns.pop(column_name)
-
+            ordered_columns = {
+                column_name: columns.pop(column_name)
+                for column_name in self.prefs.column_order
+                if column_name in columns
+            }
             # Add remaining columns unless user preference to hide them.
             if not self.prefs.omit_unspecified_columns:
                 for column_name in columns:
@@ -194,7 +189,7 @@ class TableView:
                 level_style = self.prefs.column_style(
                     'level',
                     level_text,
-                    default='class:log-level-{}'.format(log.record.levelno),
+                    default=f'class:log-level-{log.record.levelno}',
                 )
                 columns['level'] = (
                     level_style,
@@ -213,11 +208,7 @@ class TableView:
                 value = TableView.INT_FORMAT % value
                 left_justify = False
 
-            if left_justify:
-                columns[name] = value.ljust(width)
-            else:
-                columns[name] = value.rjust(width)
-
+            columns[name] = value.ljust(width) if left_justify else value.rjust(width)
         # Grab the message to appear after the justified columns with ANSI
         # escape sequences removed.
         message_text = strip_ansi(log.record.message)
@@ -233,7 +224,7 @@ class TableView:
             message_style = default_style
             if log.record.levelno >= 30:  # Warning, Error and Critical
                 # Style the whole message to match it's level
-                message_style = 'class:log-level-{}'.format(log.record.levelno)
+                message_style = f'class:log-level-{log.record.levelno}'
             message = (message_style, message)
         # Add to columns
         columns['message'] = message
@@ -248,7 +239,7 @@ class TableView:
             # theme color style for this column.
             if isinstance(column_value, str):
                 fallback_style = (
-                    'class:log-table-column-{}'.format(i + index_modifier)
+                    f'class:log-table-column-{i + index_modifier}'
                     if 0 <= i <= 7
                     else default_style
                 )
@@ -259,7 +250,6 @@ class TableView:
 
                 table_fragments.append((style, column_value))
                 table_fragments.append(padding_formatted_text)
-            # Add this tuple to table_fragments.
             elif isinstance(column, tuple):
                 table_fragments.append(column_value)
                 # Add padding if not the last column.

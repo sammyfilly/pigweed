@@ -105,8 +105,7 @@ def bazel(ctx: PresubmitContext, cmd: str, *args: str) -> None:
             )
 
     except PresubmitFailure as exc:
-        failure = bazel_parser.parse_bazel_stdout(bazel_stdout)
-        if failure:
+        if failure := bazel_parser.parse_bazel_stdout(bazel_stdout):
             with ctx.failure_summary_log.open('w') as outs:
                 outs.write(failure)
 
@@ -141,10 +140,7 @@ def gn_args(**kwargs) -> str:
     contains one or more double quotation marks, or starts with a { or [
     character, in which case it will be passed through as-is.
     """
-    transformed_args = []
-    for arg, val in kwargs.items():
-        transformed_args.append(f'{arg}={_gn_value(val)}')
-
+    transformed_args = [f'{arg}={_gn_value(val)}' for arg, val in kwargs.items()]
     # Use ccache if available for faster repeat presubmit runs.
     if which('ccache'):
         transformed_args.append('pw_command_launcher="ccache"')
@@ -167,7 +163,7 @@ def gn_gen(
     generated files. Run gn_check() after building to check generated files.
     """
     all_gn_args = dict(gn_arguments)
-    all_gn_args.update(ctx.override_gn_args)
+    all_gn_args |= ctx.override_gn_args
     _LOG.debug('%r', all_gn_args)
     args_option = gn_args(**all_gn_args)
 
@@ -273,8 +269,7 @@ def ninja(
             )
 
     except PresubmitFailure as exc:
-        failure = ninja_parser.parse_ninja_stdout(ninja_stdout)
-        if failure:
+        if failure := ninja_parser.parse_ninja_stdout(ninja_stdout):
             with ctx.failure_summary_log.open('w') as outs:
                 outs.write(failure)
 
@@ -473,10 +468,13 @@ def check_gn_build_for_files(
     missing: List[Path] = []
 
     if gn_dirs or gn_build_files:
-        for path in (p for p in files if p.suffix in gn_extensions_to_check):
-            if path not in gn_builds:
-                missing.append(path)
-
+        missing.extend(
+            path
+            for path in (
+                p for p in files if p.suffix in gn_extensions_to_check
+            )
+            if path not in gn_builds
+        )
     if missing:
         _LOG.warning(
             '%s missing from the GN build:\n%s',
@@ -697,9 +695,7 @@ class _NinjaBase(Check):
 
         self._ninja_target_lists: Tuple[Tuple[str, ...], ...]
         if all_strings:
-            targets: List[str] = []
-            for target in ninja_targets:
-                targets.append(target)  # type: ignore
+            targets: List[str] = list(ninja_targets)
             self._ninja_target_lists = (tuple(targets),)
         else:
             self._ninja_target_lists = tuple(tuple(x) for x in ninja_targets)
@@ -825,11 +821,11 @@ class _NinjaBase(Check):
 
     def _ninja_substeps(self) -> Iterator[SubStep]:
         targets_parts = set()
+        maxlen = 70
         for targets in self._ninja_target_lists:
             targets_part = " ".join(targets)
-            maxlen = 70
             if len(targets_part) > maxlen:
-                targets_part = f'{targets_part[0:maxlen-3]}...'
+                targets_part = f'{targets_part[:maxlen - 3]}...'
             assert targets_part not in targets_parts
             targets_parts.add(targets_part)
             yield SubStep(f'ninja {targets_part}', self._ninja, (targets,))
@@ -879,7 +875,7 @@ class GnGenNinja(_NinjaBase):
                     f'//{x.relative_to(ctx.root)}' for x in ctx.paths
                 ]
 
-        args.update({k: _value(ctx, v) for k, v in self._gn_args.items()})
+        args |= {k: _value(ctx, v) for k, v in self._gn_args.items()}
         gn_gen(ctx, gn_check=False, **args)  # type: ignore
         return PresubmitResult.PASS
 

@@ -115,9 +115,7 @@ class TestLogFilter(unittest.TestCase):
 
         return log_context
 
-    @parameterized.expand(
-        [
-            (
+    @parameterized.expand([(
                 'simple fuzzy',
                 SearchMatcher.FUZZY,
                 'log item',
@@ -132,23 +130,9 @@ class TestLogFilter(unittest.TestCase):
                 ],
                 None,  # field
                 False,  # invert
-            ),
-            (
-                'simple fuzzy inverted',
-                SearchMatcher.FUZZY,
-                'log item',
-                [
-                    ('Log some item', dict()),
-                    ('Log another item', dict()),
-                    ('Some exception', dict()),
-                ],
-                [
+            ), ('simple fuzzy inverted', SearchMatcher.FUZZY, 'log item', [('Log some item', {}), ('Log another item', {}), ('Some exception', {})], [
                     'Some exception',
-                ],
-                None,  # field
-                True,  # invert
-            ),
-            (
+                ], None, True), (
                 'regex with field',
                 SearchMatcher.REGEX,
                 'earth',
@@ -172,8 +156,7 @@ class TestLogFilter(unittest.TestCase):
                 ],
                 'planet',  # field
                 False,  # invert
-            ),
-            (
+            ), (
                 'regex with field inverted',
                 SearchMatcher.REGEX,
                 'earth',
@@ -196,9 +179,7 @@ class TestLogFilter(unittest.TestCase):
                 ],
                 'planet',  # field
                 True,  # invert
-            ),
-        ]
-    )
+            )])
     def test_log_filter_matches(
         self,
         _name,
@@ -220,15 +201,13 @@ class TestLogFilter(unittest.TestCase):
             field=field,
         )
 
-        matched_lines = []
         logs = self._create_logs(input_lines)
 
-        for record in logs.records:
-            if log_filter.matches(
-                LogLine(record, record.message, record.message)
-            ):
-                matched_lines.append(record.message)
-
+        matched_lines = [
+            record.message
+            for record in logs.records
+            if log_filter.matches(LogLine(record, record.message, record.message))
+        ]
         self.assertEqual(expected_matched_lines, matched_lines)
 
 

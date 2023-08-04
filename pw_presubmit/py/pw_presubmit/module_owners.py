@@ -73,7 +73,7 @@ def presubmit_check(
                 contents = [x.strip() for x in ins.read().strip().splitlines()]
                 wo_comments = [x for x in contents if not x.startswith('#')]
                 owners = [x for x in wo_comments if 'per-file' not in x]
-                if len(owners) < 1:
+                if not owners:
                     _LOG.error('%s is too short: add owners', owners_path)
 
         if errors:

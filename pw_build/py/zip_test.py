@@ -70,11 +70,7 @@ def touch(parent_dir: pathlib.Path, filename: str):
 
 def get_directory_contents(path: pathlib.Path):
     """Iterates through a directory and returns a set of its contents."""
-    contents = set()
-    for filename in path.glob('**/*'):
-        # Remove the original parent directories to get just the relative path.
-        contents.add(filename.relative_to(path))
-    return contents
+    return {filename.relative_to(path) for filename in path.glob('**/*')}
 
 
 class TestZipping(unittest.TestCase):

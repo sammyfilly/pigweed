@@ -304,11 +304,7 @@ class LogScreen:
             line buffer."""
         remaining_lines = line_count
 
-        # Loop from a negative line_count value to zero.
-        # For example if line_count is -5 the loop will traverse:
-        # >>> list(i for i in range(-5, 0, 1))
-        # [-5, -4, -3, -2, -1]
-        for _ in range(line_count, 0, 1):
+        for _ in range(remaining_lines, 0, 1):
             new_index = self.cursor_position - 1
             if new_index < 0:
                 break
@@ -333,7 +329,7 @@ class LogScreen:
             of new lines that need to be fetched and appended to the screen line
             buffer."""
         remaining_lines = line_count
-        for _ in range(line_count):
+        for _ in range(remaining_lines):
             new_index = self.cursor_position + 1
             if new_index >= self.height:
                 break
@@ -462,7 +458,7 @@ class LogScreen:
                 desired number of lines were fetched successfully."""
         start_log_index, _log_source = self.get_log_source()
         remaining_lines = line_count
-        for _ in range(line_count, 0, 1):
+        for _ in range(remaining_lines, 0, 1):
             current_line = self.get_line_at_cursor_position()
             if current_line.log_index is None:
                 return remaining_lines + 1
@@ -511,7 +507,7 @@ class LogScreen:
                 desired number of lines were fetched successfully."""
         _start_log_index, log_source = self.get_log_source()
         remaining_lines = line_count
-        for _ in range(line_count):
+        for _ in range(remaining_lines):
             # Skip this line if not at the bottom
             if self.cursor_position < self.height - 1:
                 self.cursor_position += 1
@@ -582,11 +578,7 @@ class LogScreen:
 
         # Select the log display formatter; table or standard.
         fragments: StyleAndTextTuples = []
-        if table_formatter:
-            fragments = table_formatter(log)
-        else:
-            fragments = log.get_fragments()
-
+        fragments = table_formatter(log) if table_formatter else log.get_fragments()
         # Apply search term highlighting.
         if search_filter and search_highlight and search_filter.matches(log):
             fragments = search_filter.highlight_search_matches(fragments)
@@ -597,10 +589,7 @@ class LogScreen:
             max_line_width=self.width,
             truncate_long_lines=truncate_lines,
         )
-        # Convert the existing flattened fragments to a list of lines.
-        fragments_per_line = split_lines(line_fragments)
-
-        return fragments_per_line
+        return split_lines(line_fragments)
 
     def prepend_log(
         self,

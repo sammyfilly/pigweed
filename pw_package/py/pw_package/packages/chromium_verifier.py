@@ -153,10 +153,7 @@ class ChromiumVerifier(pw_package.package_manager.Package):
         googletest_repo = chromium_third_party_googletest_repo_path(
             chromium_repo
         )
-        if not self._googletest.status(googletest_repo):
-            return False
-
-        return True
+        return bool(self._googletest.status(googletest_repo))
 
     def info(self, path: pathlib.Path) -> Sequence[str]:
         return (

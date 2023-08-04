@@ -54,10 +54,7 @@ CUSTOM_FORMATTERS = [
 
 
 def prompt_toolkit_app_running() -> bool:
-    existing_app = get_app_or_none()
-    if existing_app:
-        return True
-    return False
+    return bool(existing_app := get_app_or_none())
 
 
 @dataclass

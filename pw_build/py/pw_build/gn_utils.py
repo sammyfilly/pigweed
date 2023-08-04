@@ -324,9 +324,7 @@ def _as_path(item: Union[str, GnPath, GnLabel, PurePosixPath]) -> PurePosixPath:
         return PurePosixPath(item)
     if isinstance(item, GnPath):
         return PurePosixPath(item.path())
-    if isinstance(item, GnLabel):
-        return PurePosixPath(item.dir())
-    return item
+    return PurePosixPath(item.dir()) if isinstance(item, GnLabel) else item
 
 
 def _is_relative_to(

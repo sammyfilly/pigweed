@@ -431,8 +431,7 @@ format_owners_file = functools.partial(_list_unwrapper, _format_owners_file)
 def presubmit_check(
     files: Union[pathlib.Path, Collection[pathlib.Path]]
 ) -> None:
-    errors = run_owners_checks(files)
-    if errors:
+    if errors := run_owners_checks(files):
         for file in errors:
             _LOG.warning("  pw format --fix %s", file)
         _LOG.warning("will automatically fix this.")

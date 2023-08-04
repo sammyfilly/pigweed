@@ -91,12 +91,12 @@ class TestCreatePythonTree(unittest.TestCase):
 
     def _check_result_paths_equal(self, install_dir, expected_results) -> None:
         # Normalize path strings to posix before comparing.
-        expected_paths = set(Path(p).as_posix() for p in expected_results)
-        actual_paths = set(
+        expected_paths = {Path(p).as_posix() for p in expected_results}
+        actual_paths = {
             p.relative_to(install_dir).as_posix()
             for p in install_dir.glob('**/*')
             if p.is_file()
-        )
+        }
         self.assertEqual(expected_paths, actual_paths)
 
     def test_update_config_with_packages(self) -> None:

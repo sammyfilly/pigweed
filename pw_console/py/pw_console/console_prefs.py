@@ -268,9 +268,7 @@ class ConsolePrefs(YamlConfigLoaderMixin):
         theme_styles = generate_styles(self.ui_theme)
         style_classes = dict(theme_styles.style_rules)
 
-        color_config = {}
-        color_config['classes'] = style_classes
-        color_config['column_values'] = column_colors
+        color_config = {'classes': style_classes, 'column_values': column_colors}
         return {'__pw_console_colors': color_config}
 
     @property
@@ -286,7 +284,7 @@ class ConsolePrefs(YamlConfigLoaderMixin):
 
     @property
     def window_column_modes(self) -> List:
-        return list(column_type for column_type in self.windows.keys())
+        return list(self.windows.keys())
 
     @property
     def command_runner_position(self) -> Dict[str, int]:
@@ -346,7 +344,7 @@ class ConsolePrefs(YamlConfigLoaderMixin):
         try:
             return self.registered_commands[name]
         except KeyError as error:
-            raise KeyError('Unbound key function: {}'.format(name)) from error
+            raise KeyError(f'Unbound key function: {name}') from error
 
     def register_named_key_function(
         self, name: str, default_bindings: List[str]
@@ -381,9 +379,7 @@ class ConsolePrefs(YamlConfigLoaderMixin):
         all_snippets: List[CodeSnippet] = []
 
         def previous_description() -> Optional[str]:
-            if not all_snippets:
-                return None
-            return all_snippets[-1].description
+            return None if not all_snippets else all_snippets[-1].description
 
         for title, value in self.user_snippets.items():
             all_snippets.append(

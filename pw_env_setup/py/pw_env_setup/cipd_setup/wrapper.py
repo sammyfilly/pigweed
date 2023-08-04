@@ -20,6 +20,7 @@ passing through all arguments.
 Must be tested with Python 2 and Python 3.
 """
 
+
 from __future__ import print_function
 
 import hashlib
@@ -80,7 +81,7 @@ except NameError:  # __file__ not defined.
         raise Exception('Environment variable PW_ROOT not set')
 
 VERSION_FILE = os.path.join(SCRIPT_DIR, '.cipd_version')
-DIGESTS_FILE = VERSION_FILE + '.digests'
+DIGESTS_FILE = f'{VERSION_FILE}.digests'
 
 # Put CIPD client in tools so that users can easily get it in their PATH.
 CIPD_HOST = 'chrome-infra-packages.appspot.com'
@@ -123,7 +124,7 @@ def platform_normalized():
             'windows': 'windows',
         }[os_name]
     except KeyError:
-        raise Exception('unrecognized os: {}'.format(os_name))
+        raise Exception(f'unrecognized os: {os_name}')
 
 
 def arch_normalized(rosetta=False):
@@ -134,18 +135,16 @@ def arch_normalized(rosetta=False):
         return 'amd64'
     if machine.startswith(('arm', 'aarch')):
         machine = machine.replace('aarch', 'arm')
-        if machine == 'arm64':
-            return machine
-        return 'armv6l'
+        return machine if machine == 'arm64' else 'armv6l'
     if machine.endswith('64'):
         return 'amd64'
     if machine.endswith('86'):
         return '386'
-    raise Exception('unrecognized arch: {}'.format(machine))
+    raise Exception(f'unrecognized arch: {machine}')
 
 
 def platform_arch_normalized(rosetta=False):
-    return '{}-{}'.format(platform_normalized(), arch_normalized(rosetta))
+    return f'{platform_normalized()}-{arch_normalized(rosetta)}'
 
 
 def user_agent():
@@ -161,7 +160,7 @@ def user_agent():
     if isinstance(rev, bytes):
         rev = rev.decode()
 
-    return 'pigweed-infra/tools/{}'.format(rev)
+    return f'pigweed-infra/tools/{rev}'
 
 
 def actual_hash(path):
@@ -186,7 +185,7 @@ def expected_hash(rosetta=False):
             plat, hashtype, hashval = line.split()
             if hashtype == 'sha256' and plat == expected_plat:
                 return hashval
-    raise Exception('platform {} not in {}'.format(expected_plat, DIGESTS_FILE))
+    raise Exception(f'platform {expected_plat} not in {DIGESTS_FILE}')
 
 
 def https_connect_with_proxy(target_url):
@@ -194,21 +193,19 @@ def https_connect_with_proxy(target_url):
 
     proxy_env = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
     if proxy_env in (None, ''):
-        conn = httplib.HTTPSConnection(target_url)
-        return conn
-
+        return httplib.HTTPSConnection(target_url)
     url = urlparse.urlparse(proxy_env)
     conn = httplib.HTTPSConnection(url.hostname, url.port)
     headers = {}
     if url.username and url.password:
-        auth = '%s:%s' % (url.username, url.password)
+        auth = f'{url.username}:{url.password}'
         py_version = sys.version_info.major
         if py_version >= 3:
-            headers['Proxy-Authorization'] = 'Basic ' + str(
-                base64.b64encode(auth.encode()).decode()
-            )
+            headers[
+                'Proxy-Authorization'
+            ] = f'Basic {str(base64.b64encode(auth.encode()).decode())}'
         else:
-            headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(auth)
+            headers['Proxy-Authorization'] = f'Basic {base64.b64encode(auth)}'
     conn.set_tunnel(target_url, 443, headers)
     return conn
 
@@ -245,7 +242,7 @@ brew uninstall python && brew install python
     if full_platform not in SUPPORTED_PLATFORMS:
         raise UnsupportedPlatform(full_platform)
 
-    path = '/client?platform={}&version={}'.format(full_platform, version)
+    path = f'/client?platform={full_platform}&version={version}'
 
     for _ in range(10):
         try:
@@ -288,21 +285,17 @@ brew uninstall python && brew install python
         if res.status == httplib.OK:  # pylint: disable=no-else-return
             return content
 
-        # Redirecting to another location.
         elif res.status == httplib.FOUND:
             location = res.getheader('location')
             url = urlparse.urlparse(location)
             if url.netloc != conn.host:
                 conn = https_connect_with_proxy(url.netloc)
-            path = '{}?{}'.format(url.path, url.query)
+            path = f'{url.path}?{url.query}'
 
-        # Some kind of error in this response.
         else:
             break
 
-    raise Exception(
-        'failed to download client from https://{}{}'.format(CIPD_HOST, path)
-    )
+    raise Exception(f'failed to download client from https://{CIPD_HOST}{path}')
 
 
 def bootstrap(
@@ -317,13 +310,9 @@ def bootstrap(
         os.makedirs(client_dir)
 
     if not silent:
-        print(
-            'Bootstrapping cipd client for {}'.format(
-                platform_arch_normalized(rosetta)
-            )
-        )
+        print(f'Bootstrapping cipd client for {platform_arch_normalized(rosetta)}')
 
-    tmp_path = client + '.tmp'
+    tmp_path = f'{client}.tmp'
     with open(tmp_path, 'wb') as tmp:
         tmp.write(client_bytes(rosetta))
 
@@ -349,7 +338,7 @@ def selfupdate(client):
         '-version-file',
         VERSION_FILE,
         '-service-url',
-        'https://{}'.format(CIPD_HOST),
+        f'https://{CIPD_HOST}',
     ]
     subprocess.check_call(cmd)
 

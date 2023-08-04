@@ -25,18 +25,18 @@ class BloatyConfigTest(unittest.TestCase):
     def test_map_segments_to_memory_regions(self) -> None:
         """Ensures the mapping works correctly based on a real example."""
         segments = {
-            3: (int(0x800F268), int(0x8100200)),
-            5: (int(0x20004650), int(0x20020650)),
-            6: (int(0x20020650), int(0x20030000)),
-            1: (int(0x8000200), int(0x800F060)),
-            4: (int(0x20000208), int(0x20004650)),
-            2: (int(0x20000000), int(0x20000208)),
-            0: (int(0x8000000), int(0x8000200)),
+            3: (134279784, 135266816),
+            5: (536888912, 537003600),
+            6: (537003600, 537067520),
+            1: (134218240, 134279264),
+            4: (536871432, 536888912),
+            2: (536870912, 536871432),
+            0: (134217728, 134218240),
         }
         memory_regions = {
-            'FLASH': {0: (int(0x8000200), int(0x8100200))},
-            'RAM': {0: (int(0x20000000), int(0x20030000))},
-            'VECTOR_TABLE': {0: (int(0x8000000), int(0x8000200))},
+            'FLASH': {0: (134218240, 135266816)},
+            'RAM': {0: (536870912, 537067520)},
+            'VECTOR_TABLE': {0: (134217728, 134218240)},
         }
         expected = {
             3: 'FLASH',

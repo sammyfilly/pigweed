@@ -92,7 +92,7 @@ def status_choice(arg):
 def status_badge(module_status: str) -> str:
     """Given a module status, return the status badge for rendering."""
     role = ':bdg-primary:'
-    return role + f'`{module_status.title()}`'
+    return f'{role}`{module_status.title()}`'
 
 
 def cs_url(module_name: str) -> str:

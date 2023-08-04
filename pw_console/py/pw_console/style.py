@@ -217,8 +217,7 @@ _THEME_NAME_MAPPING = {
 
 
 def get_theme_colors(theme_name=''):
-    theme = _THEME_NAME_MAPPING.get(theme_name, DarkColors())
-    return theme
+    return _THEME_NAME_MAPPING.get(theme_name, DarkColors())
 
 
 def generate_styles(theme_name='dark'):

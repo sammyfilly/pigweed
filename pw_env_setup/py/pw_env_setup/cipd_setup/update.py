@@ -60,7 +60,7 @@ def check_auth(cipd, package_files, cipd_service_account, spin):
 
         match = re.search(r'Logged in as (\S*)\.', output)
         if match:
-            username = match.group(1)
+            username = match[1]
 
     except subprocess.CalledProcessError:
         logged_in = False
@@ -150,7 +150,7 @@ def platform(rosetta=False):
     else:
         arch = platform_module.machine()
 
-    platform_arch = '{}-{}'.format(osname, arch).lower()
+    platform_arch = f'{osname}-{arch}'.lower()
 
     # Support `mac-arm64` through Rosetta until `mac-arm64` binaries are ready
     if platform_arch == 'mac-arm64' and rosetta:
@@ -196,8 +196,7 @@ def all_package_files(env_vars, package_files):
                 ]
 
             if entries:
-                for entry in flatten_package_files(entries):
-                    yield entry
+                yield from flatten_package_files(entries)
 
     return list(flatten_package_files(to_process))
 
@@ -258,8 +257,8 @@ def write_ensure_file(
             if 'platforms' in pkg and platform not in pkg['platforms']:
                 continue
 
-            outs.write('@Subdir {}\n'.format(pkg.get('subdir', '')))
-            outs.write('{} {}\n'.format(pkg['path'], ' '.join(pkg['tags'])))
+            outs.write(f"@Subdir {pkg.get('subdir', '')}\n")
+            outs.write(f"{pkg['path']} {' '.join(pkg['tags'])}\n")
 
 
 def package_file_name(package_file):
@@ -309,10 +308,7 @@ def update(  # pylint: disable=too-many-locals
         env_vars.set('PW_CIPD_INSTALL_DIR', root_install_dir)
         env_vars.set('CIPD_CACHE_DIR', cache_dir)
 
-    pw_root = None
-
-    if env_vars:
-        pw_root = env_vars.get('PW_ROOT', None)
+    pw_root = env_vars.get('PW_ROOT', None) if env_vars else None
     if not pw_root:
         pw_root = os.environ['PW_ROOT']
 
@@ -420,7 +416,7 @@ def update(  # pylint: disable=too-many-locals
                 if os.path.isdir(bin_dir):
                     env_vars.prepend('PATH', bin_dir)
             env_vars.set(
-                'PW_{}_CIPD_INSTALL_DIR'.format(name.upper().replace('-', '_')),
+                f"PW_{name.upper().replace('-', '_')}_CIPD_INSTALL_DIR",
                 file_install_dir,
             )
 

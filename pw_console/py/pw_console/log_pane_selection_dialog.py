@@ -138,9 +138,7 @@ class LogPaneSelectionDialog(ConditionalContainer):
         fragments = [
             (
                 'class:selection-dialog-title',
-                ' {} Selected '.format(
-                    self.log_view.visual_selected_log_count()
-                ),
+                f' {self.log_view.visual_selected_log_count()} Selected ',
                 focus,
             ),
             one_space,

@@ -319,10 +319,10 @@ class Ninja:
         """Process a line of output from Ninja, updating the internal state."""
         with self.lock:
             if match := re.match(r'^@@!!@@(\d+),(\d+),(\d+)>(.*)', line):
-                actions_started = int(match.group(1))
-                actions_finished = int(match.group(2))
-                actions_total = int(match.group(3))
-                name = match.group(4)
+                actions_started = int(match[1])
+                actions_finished = int(match[2])
+                actions_total = int(match[3])
+                name = match[4]
 
                 # Sometimes Ninja delimits lines without \r, which prevents
                 # _monitor_thread from stripping out the final control code,

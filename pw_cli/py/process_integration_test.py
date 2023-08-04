@@ -13,6 +13,7 @@
 # the License.
 """Tests for pw_cli.process."""
 
+
 import unittest
 import sys
 import textwrap
@@ -24,7 +25,7 @@ import psutil  # type: ignore
 # This timeout must be long enough to wait for the subprocess output, but
 # fast enough that the test doesn't take terribly long in the success case.
 FAST_TIMEOUT_SECONDS = 0.5
-KILL_SIGNALS = set({-9, 137})
+KILL_SIGNALS = {-9, 137}
 PYTHON = sys.executable
 
 

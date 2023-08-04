@@ -238,12 +238,12 @@ def execute_command_with_logging(
         ending_failure_regex = _BAZEL_ELAPSED_TIME
 
     with subprocess.Popen(
-        command,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        errors='replace',
-    ) as proc:
+            command,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            errors='replace',
+        ) as proc:
         BUILDER_CONTEXT.register_process(recipe, proc)
         should_log_build_steps = BUILDER_CONTEXT.log_build_steps
         # Empty line at the start.
@@ -305,12 +305,7 @@ def execute_command_with_logging(
             stripped_output = output.replace('\x1b(B', '').strip()
 
             # If this isn't a build step.
-            if not line_match_result or (
-                # Or if this is a build step and logging build steps is
-                # requested:
-                line_match_result
-                and should_log_build_steps
-            ):
+            if not line_match_result or should_log_build_steps:
                 # Log this line.
                 logger_method(stripped_output)
             recipe.status.current_step = stripped_output
@@ -358,7 +353,7 @@ def log_build_recipe_start(
         project_builder.color.blue('Recipe:'),
         str(cfg.display_name),
         project_builder.color.blue('Targets:'),
-        str(' '.join(cfg.targets())),
+        ' '.join(cfg.targets()),
     ]
 
     if cfg.logfile:
@@ -533,7 +528,7 @@ class ProjectBuilder:  # pylint: disable=too-many-instance-attributes
         self.banners = banners
         self.build_recipes = build_recipes
         self.max_name_width = max(
-            [len(str(step.display_name)) for step in self.build_recipes]
+            len(str(step.display_name)) for step in self.build_recipes
         )
         # Set project_builder reference in each recipe.
         for recipe in self.build_recipes:
@@ -592,7 +587,7 @@ class ProjectBuilder:  # pylint: disable=too-many-instance-attributes
         # no formatter exists on the root logger.
         timestamp_fmt = self.color.black_on_white('%(asctime)s') + ' '
         self.default_log_formatter = logging.Formatter(
-            timestamp_fmt + '%(levelname)s %(message)s', '%Y%m%d %H:%M:%S'
+            f'{timestamp_fmt}%(levelname)s %(message)s', '%Y%m%d %H:%M:%S'
         )
 
         # Empty log formatter (optionally used for error reporting)
@@ -696,9 +691,7 @@ class ProjectBuilder:  # pylint: disable=too-many-instance-attributes
     def should_use_progress_bars(self) -> bool:
         if not self.allow_progress_bars:
             return False
-        if self.separate_build_file_logging or self.default_logfile:
-            return True
-        return False
+        return bool(self.separate_build_file_logging or self.default_logfile)
 
     def use_stdout_proxy(self) -> None:
         """Setup StdoutProxy for progress bars."""
@@ -734,7 +727,7 @@ class ProjectBuilder:  # pylint: disable=too-many-instance-attributes
         return self.build_recipes[index]
 
     def __iter__(self) -> Generator[BuildRecipe, None, None]:
-        return (build_recipe for build_recipe in self.build_recipes)
+        return iter(self.build_recipes)
 
     def run_build(
         self,
@@ -865,16 +858,14 @@ class ProjectBuilder:  # pylint: disable=too-many-instance-attributes
             for slug, cmd in zip(build_status, build_descriptions):
                 logger.info(' ║   %s  %s', slug, cmd)
 
-            logger.info(' ║')
-            logger.info(" ╚════════════════════════════════════")
         else:
             # Build was interrupted.
             logger.info('')
             logger.info(' ╔════════════════════════════════════')
             logger.info(' ║')
             logger.info(' ║  %s- interrupted', self.charset.slug_fail)
-            logger.info(' ║')
-            logger.info(" ╚════════════════════════════════════")
+        logger.info(' ║')
+        logger.info(" ╚════════════════════════════════════")
 
 
 def run_recipe(
@@ -990,11 +981,7 @@ def main() -> int:
     args = parser.parse_args()
 
     pw_env = pw_cli.env.pigweed_environment()
-    if pw_env.PW_EMOJI:
-        charset = EMOJI_CHARSET
-    else:
-        charset = ASCII_CHARSET
-
+    charset = EMOJI_CHARSET if pw_env.PW_EMOJI else ASCII_CHARSET
     prefs = ProjectBuilderPrefs(
         load_argparse_arguments=add_project_builder_arguments
     )
@@ -1027,9 +1014,6 @@ def main() -> int:
 
     workers = 1
     if args.parallel:
-        # If parallel is requested and parallel_workers is set to 0 run all
-        # recipes in parallel. That is, use the number of recipes as the worker
-        # count.
         if args.parallel_workers == 0:
             workers = len(project_builder)
         else:

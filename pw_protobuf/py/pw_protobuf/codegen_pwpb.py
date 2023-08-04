@@ -114,9 +114,7 @@ class ProtoMember(abc.ABC):
         """Whether the member should be generated."""
 
     def field_cast(self) -> str:
-        return 'static_cast<uint32_t>(Fields::{})'.format(
-            self._field.enum_name()
-        )
+        return f'static_cast<uint32_t>(Fields::{self._field.enum_name()})'
 
     def _relative_type_namespace(self, from_root: bool = False) -> str:
         """Returns relative namespace between member's scope and field type."""
@@ -206,16 +204,14 @@ class WriteMethod(ProtoMethod):
     """
 
     def name(self) -> str:
-        return 'Write{}'.format(self._field.name())
+        return f'Write{self._field.name()}'
 
     def return_type(self, from_root: bool = False) -> str:
         return '::pw::Status'
 
     def body(self) -> List[str]:
         params = ', '.join([pair[1] for pair in self.params()])
-        line = 'return {}::{}({}, {});'.format(
-            self._base_class, self._encoder_fn(), self.field_cast(), params
-        )
+        line = f'return {self._base_class}::{self._encoder_fn()}({self.field_cast()}, {params});'
         return [line]
 
     def params(self) -> List[Tuple[str, str]]:
@@ -264,10 +260,10 @@ class ReadMethod(ProtoMethod):
     """
 
     def name(self) -> str:
-        return 'Read{}'.format(self._field.name())
+        return f'Read{self._field.name()}'
 
     def return_type(self, from_root: bool = False) -> str:
-        return '::pw::Result<{}>'.format(self._result_type())
+        return f'::pw::Result<{self._result_type()}>'
 
     def _result_type(self) -> str:
         """The type returned by the deoder function.
@@ -282,18 +278,14 @@ class ReadMethod(ProtoMethod):
         lines: List[str] = []
         lines += ['::pw::Result<uint32_t> field_number = FieldNumber();']
         lines += ['PW_ASSERT(field_number.ok());']
-        lines += [
-            'PW_ASSERT(field_number.value() == {});'.format(self.field_cast())
-        ]
+        lines += [f'PW_ASSERT(field_number.value() == {self.field_cast()});']
         lines += self._decoder_body()
         return lines
 
     def _decoder_body(self) -> List[str]:
         """Returns the decoder body part as a list of source code lines."""
         params = ', '.join([pair[1] for pair in self.params()])
-        line = 'return {}::{}({});'.format(
-            self._base_class, self._decoder_fn(), params
-        )
+        line = f'return {self._base_class}::{self._decoder_fn()}({params});'
         return [line]
 
     def _decoder_fn(self) -> str:
@@ -326,7 +318,7 @@ class PackedReadMethod(ReadMethod):
         return '::pw::StatusWithSize'
 
     def params(self) -> List[Tuple[str, str]]:
-        return [('pw::span<{}>'.format(self._result_type()), 'out')]
+        return [(f'pw::span<{self._result_type()}>', 'out')]
 
 
 class PackedReadVectorMethod(ReadMethod):
@@ -343,12 +335,12 @@ class PackedReadVectorMethod(ReadMethod):
         return '::pw::Status'
 
     def params(self) -> List[Tuple[str, str]]:
-        return [('::pw::Vector<{}>&'.format(self._result_type()), 'out')]
+        return [(f'::pw::Vector<{self._result_type()}>&', 'out')]
 
 
 class FindMethod(ReadMethod):
     def name(self) -> str:
-        return 'Find{}'.format(self._field.name())
+        return f'Find{self._field.name()}'
 
     def params(self) -> List[Tuple[str, str]]:
         return [('::pw::ConstByteSpan', 'message')]
@@ -373,7 +365,7 @@ class FindMethod(ReadMethod):
 
 class FindStreamMethod(FindMethod):
     def name(self) -> str:
-        return 'Find{}'.format(self._field.name())
+        return f'Find{self._field.name()}'
 
     def params(self) -> List[Tuple[str, str]]:
         return [('::pw::stream::Reader&', 'message_stream')]
@@ -475,10 +467,7 @@ class MessageProperty(ProtoMember):
 
         # Optional fields are wrapped in std::optional
         if self.is_optional():
-            return (
-                'std::optional<{}>'.format(self.type_name(from_root)),
-                self.name(),
-            )
+            return f'std::optional<{self.type_name(from_root)}>', self.name()
 
         # Non-repeated fields have a member of just the type name.
         max_size = self.max_size()
@@ -487,12 +476,7 @@ class MessageProperty(ProtoMember):
 
         # Fixed size fields use std::array.
         if self.is_fixed_size():
-            return (
-                'std::array<{}, {}>'.format(
-                    self.type_name(from_root), max_size
-                ),
-                self.name(),
-            )
+            return f'std::array<{self.type_name(from_root)}, {max_size}>', self.name()
 
         # Otherwise prefer pw::Vector for repeated fields.
         return (
@@ -502,17 +486,15 @@ class MessageProperty(ProtoMember):
 
     def _varint_type_table_entry(self) -> str:
         if self.wire_type() == 'kVarint':
-            return '{}::VarintType::{}'.format(
-                _INTERNAL_NAMESPACE, self.varint_decode_type()
-            )
+            return f'{_INTERNAL_NAMESPACE}::VarintType::{self.varint_decode_type()}'
 
         return f'static_cast<{_INTERNAL_NAMESPACE}::VarintType>(0)'
 
     def _wire_type_table_entry(self) -> str:
-        return '{}::WireType::{}'.format(PROTOBUF_NAMESPACE, self.wire_type())
+        return f'{PROTOBUF_NAMESPACE}::WireType::{self.wire_type()}'
 
     def _elem_size_table_entry(self) -> str:
-        return 'sizeof({})'.format(self.type_name())
+        return f'sizeof({self.type_name()})'
 
     def _bool_attr(self, attr: str) -> str:
         """C++ string for a bool argument that includes the argument name."""
@@ -530,8 +512,8 @@ class MessageProperty(ProtoMember):
             self._bool_attr('is_repeated'),
             self._bool_attr('is_optional'),
             self._bool_attr('use_callback'),
-            'offsetof(Message, {})'.format(self.name()),
-            'sizeof(Message::{})'.format(self.name()),
+            f'offsetof(Message, {self.name()})',
+            f'sizeof(Message::{self.name()})',
             self.sub_table(),
         ]
 
@@ -545,15 +527,10 @@ class MessageProperty(ProtoMember):
 
     def max_encoded_size(self) -> str:
         """Returns a constant expression for field's maximum encoded size."""
-        size_call = '{}::{}({})'.format(
-            PROTOBUF_NAMESPACE, self._size_fn(), self.field_cast()
-        )
+        size_call = f'{PROTOBUF_NAMESPACE}::{self._size_fn()}({self.field_cast()})'
 
         size_length: Optional[str] = self._size_length()
-        if size_length is None:
-            return size_call
-
-        return f'{size_call} + {size_length}'
+        return size_call if size_length is None else f'{size_call} + {size_length}'
 
     def include_in_scratch_size(self) -> bool:  # pylint: disable=no-self-use
         """Returns whether the field contributes to the scratch buffer size."""
@@ -570,20 +547,16 @@ class SubMessageEncoderMethod(ProtoMethod):
     """Method which returns a sub-message encoder."""
 
     def name(self) -> str:
-        return 'Get{}Encoder'.format(self._field.name())
+        return f'Get{self._field.name()}Encoder'
 
     def return_type(self, from_root: bool = False) -> str:
-        return '{}::StreamEncoder'.format(
-            self._relative_type_namespace(from_root)
-        )
+        return f'{self._relative_type_namespace(from_root)}::StreamEncoder'
 
     def params(self) -> List[Tuple[str, str]]:
         return []
 
     def body(self) -> List[str]:
-        line = 'return {}::StreamEncoder({}::GetNestedEncoder({}));'.format(
-            self._relative_type_namespace(), self._base_class, self.field_cast()
-        )
+        line = f'return {self._relative_type_namespace()}::StreamEncoder({self._base_class}::GetNestedEncoder({self.field_cast()}));'
         return [line]
 
     # Submessage methods are not defined within the class itself because the
@@ -596,17 +569,13 @@ class SubMessageDecoderMethod(ReadMethod):
     """Method which returns a sub-message decoder."""
 
     def name(self) -> str:
-        return 'Get{}Decoder'.format(self._field.name())
+        return f'Get{self._field.name()}Decoder'
 
     def return_type(self, from_root: bool = False) -> str:
-        return '{}::StreamDecoder'.format(
-            self._relative_type_namespace(from_root)
-        )
+        return f'{self._relative_type_namespace(from_root)}::StreamDecoder'
 
     def _decoder_body(self) -> List[str]:
-        line = 'return {}::StreamDecoder(GetNestedDecoder());'.format(
-            self._relative_type_namespace()
-        )
+        line = f'return {self._relative_type_namespace()}::StreamDecoder(GetNestedDecoder());'
         return [line]
 
     # Submessage methods are not defined within the class itself because the
@@ -646,7 +615,7 @@ class SubMessageProperty(MessageProperty):
         return '0'
 
     def type_name(self, from_root: bool = False) -> str:
-        return '{}::Message'.format(self._relative_type_namespace(from_root))
+        return f'{self._relative_type_namespace(from_root)}::Message'
 
     def use_callback(self) -> bool:
         # Always use a callback for a message dependency removed to break a
@@ -667,7 +636,7 @@ class SubMessageProperty(MessageProperty):
         if self.use_callback():
             return 'nullptr'
 
-        return '&{}::kMessageFields'.format(self._relative_type_namespace())
+        return f'&{self._relative_type_namespace()}::kMessageFields'
 
     def _size_fn(self) -> str:
         # This uses the WithoutValue method to ensure that the maximum length
@@ -680,9 +649,7 @@ class SubMessageProperty(MessageProperty):
         if self.use_callback():
             return None
 
-        return '{}::kMaxEncodedSizeBytes'.format(
-            self._relative_type_namespace()
-        )
+        return f'{self._relative_type_namespace()}::kMaxEncodedSizeBytes'
 
     def include_in_scratch_size(self) -> bool:
         return True
@@ -692,7 +659,7 @@ class BytesReaderMethod(ReadMethod):
     """Method which returns a bytes reader."""
 
     def name(self) -> str:
-        return 'Get{}Reader'.format(self._field.name())
+        return f'Get{self._field.name()}Reader'
 
     def return_type(self, from_root: bool = False) -> str:
         return f'{PROTOBUF_NAMESPACE}::StreamDecoder::BytesReader'
@@ -2019,9 +1986,7 @@ class BytesProperty(MessageProperty):
         return 'SizeOfDelimitedFieldWithoutValue'
 
     def _size_length(self) -> Optional[str]:
-        if self.use_callback():
-            return None
-        return f'{self.max_size()}'
+        return None if self.use_callback() else f'{self.max_size()}'
 
 
 class StringLenWriteMethod(WriteMethod):
@@ -2152,9 +2117,7 @@ class StringProperty(MessageProperty):
         return 'SizeOfDelimitedFieldWithoutValue'
 
     def _size_length(self) -> Optional[str]:
-        if self.use_callback():
-            return None
-        return f'{self.max_size()}'
+        return None if self.use_callback() else f'{self.max_size()}'
 
 
 class EnumWriteMethod(WriteMethod):
@@ -2164,12 +2127,7 @@ class EnumWriteMethod(WriteMethod):
         return [(self._relative_type_namespace(), 'value')]
 
     def body(self) -> List[str]:
-        line = (
-            'return {}::WriteUint32({}, '
-            'static_cast<uint32_t>(value));'.format(
-                self._base_class, self.field_cast()
-            )
-        )
+        line = f'return {self._base_class}::WriteUint32({self.field_cast()}, static_cast<uint32_t>(value));'
         return [line]
 
     def in_class_definition(self) -> bool:
@@ -2183,12 +2141,7 @@ class PackedEnumWriteMethod(PackedWriteMethod):
     """Method which writes a packed list of enum."""
 
     def params(self) -> List[Tuple[str, str]]:
-        return [
-            (
-                'pw::span<const {}>'.format(self._relative_type_namespace()),
-                'values',
-            )
-        ]
+        return [(f'pw::span<const {self._relative_type_namespace()}>', 'values')]
 
     def body(self) -> List[str]:
         value_param = self.params()[0][1]
@@ -2210,14 +2163,7 @@ class PackedEnumWriteVectorMethod(PackedEnumWriteMethod):
     """Method which writes a packed vector of enum."""
 
     def params(self) -> List[Tuple[str, str]]:
-        return [
-            (
-                'const ::pw::Vector<{}>&'.format(
-                    self._relative_type_namespace()
-                ),
-                'values',
-            )
-        ]
+        return [(f'const ::pw::Vector<{self._relative_type_namespace()}>&', 'values')]
 
 
 class EnumReadMethod(ReadMethod):
@@ -2782,9 +2728,7 @@ def generate_code_for_enum(
         for name, number in proto_enum.values():
             output.write_line(f'{name} = {number},')
 
-            style_name = 'k' + ProtoMessageField.upper_camel_case(
-                name[len(common_prefix) :]
-            )
+            style_name = f'k{ProtoMessageField.upper_camel_case(name[len(common_prefix):])}'
             if style_name != name:
                 output.write_line(f'{style_name} = {name},')
 
@@ -2914,7 +2858,7 @@ def generate_struct_for_message(
         output.write_line()
         output.write_line('bool operator==(const Message& other) const {')
         with output.indent():
-            if len(cmp) > 0:
+            if cmp:
                 output.write_line(f'return {" && ".join(cmp)};')
             else:
                 output.write_line('static_cast<void>(other);')
@@ -2951,14 +2895,9 @@ def generate_table_for_message(
     # be converted into a table.
     for idx, prop in enumerate(properties):
         if idx > 0:
-            output.write_line(
-                'static_assert(offsetof(Message, {}) > 0);'.format(prop.name())
-            )
+            output.write_line(f'static_assert(offsetof(Message, {prop.name()}) > 0);')
         output.write_line(
-            'static_assert(sizeof(Message::{}) <= '
-            '{}::MessageField::kMaxFieldSize);'.format(
-                prop.name(), _INTERNAL_NAMESPACE
-            )
+            f'static_assert(sizeof(Message::{prop.name()}) <= {_INTERNAL_NAMESPACE}::MessageField::kMaxFieldSize);'
         )
 
     # Zero-length C arrays are not permitted by the C++ standard, so only
@@ -3037,24 +2976,26 @@ def generate_sizes_for_message(
 
     output.write_line('inline constexpr size_t kMaxEncodedSizeBytes =')
     with output.indent():
-        if len(property_sizes) == 0:
+        if not property_sizes:
             output.write_line('0;')
-        while len(property_sizes) > 0:
+        while property_sizes:
             property_size = property_sizes.pop(0)
-            if len(property_sizes) > 0:
+            if property_sizes:
                 output.write_line(f'{property_size} +')
             else:
                 output.write_line(f'{property_size};')
 
     output.write_line()
     output.write_line(
-        'inline constexpr size_t kScratchBufferSizeBytes = '
-        + ('std::max({' if len(scratch_sizes) > 0 else '0;')
+        (
+            'inline constexpr size_t kScratchBufferSizeBytes = '
+            + ('std::max({' if scratch_sizes else '0;')
+        )
     )
     with output.indent():
         for scratch_size in scratch_sizes:
             output.write_line(f'{scratch_size},')
-    if len(scratch_sizes) > 0:
+    if scratch_sizes:
         output.write_line('});')
 
     output.write_line(f'}}  // namespace {namespace}')

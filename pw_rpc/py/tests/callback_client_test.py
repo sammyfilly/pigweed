@@ -701,8 +701,7 @@ class ServerStreamingTest(_CallbackClientImplTestBase):
     def test_nonblocking_iteration_timeout(self) -> None:
         call = self._service.SomeServerStreaming.invoke(timeout_s=0.0001)
         with self.assertRaises(callback_client.RpcTimeout):
-            for _ in call:
-                pass
+            pass
 
     def test_nonblocking_duplicate_calls_not_cancelled(self) -> None:
         first_call = self.rpc.invoke()

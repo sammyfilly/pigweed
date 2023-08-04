@@ -185,18 +185,7 @@ class EnvironmentParser:
 
 
 # List of emoji which are considered to represent "True".
-_BOOLEAN_TRUE_EMOJI = set(
-    [
-        '✔️',
-        '👍',
-        '👍🏻',
-        '👍🏼',
-        '👍🏽',
-        '👍🏾',
-        '👍🏿',
-        '💯',
-    ]
-)
+_BOOLEAN_TRUE_EMOJI = {'✔️', '👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', '💯'}
 
 
 def strict_bool(value: str) -> bool:

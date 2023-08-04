@@ -132,7 +132,7 @@ def main():
     # Try to infer CIPD install root from the manifest name.
     if args.cipd_package_root is None:
         file_base_name = args.manifest.stem
-        args.cipd_var = 'PW_{}_CIPD_INSTALL_DIR'.format(file_base_name.upper())
+        args.cipd_var = f'PW_{file_base_name.upper()}_CIPD_INSTALL_DIR'
         try:
             args.cipd_package_root = os.environ[args.cipd_var]
         except KeyError:

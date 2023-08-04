@@ -131,9 +131,9 @@ class DataSourceMap:
         return ds_map_tsv
 
     def __init__(self, data_sources_names: Iterable[str]):
-        self._data_sources = list(
+        self._data_sources = [
             _DataSource(name) for name in ['base', *data_sources_names]
-        )
+        ]
         self._capacity_array: List[Tuple[str, int]] = []
 
     def label_exists(
@@ -189,20 +189,20 @@ class DataSourceMap:
             if self.label_exists(
                 parent_data_source_index, curr_parent, b_label.name
             ):
-                diff_size = (
-                    self._data_sources[parent_data_source_index][curr_parent][
-                        b_label.name
-                    ].size
-                ) - b_label.size
-
-                if diff_size:
+                if (
+                    diff_size := (
+                        self._data_sources[parent_data_source_index][curr_parent][
+                            b_label.name
+                        ].size
+                    )
+                    - b_label.size
+                ):
                     diff_dsm.insert_label_hierachy(
                         lb_hierachy_names, diff_size, True
                     )
                 else:
                     diff_dsm.insert_label_hierachy(lb_hierachy_names, 0, True)
 
-            # label is not present in target - insert with negative size
             else:
                 diff_dsm.insert_label_hierachy(
                     lb_hierachy_names, -1 * b_label.size, False
@@ -254,13 +254,10 @@ class DataSourceMap:
         data_sources: Sequence[_DataSource],
     ) -> Iterable[Label]:
         """Recursive generator to return Label based off parent labels."""
-        if parent_labels:
-            current_parent = parent_labels[-1]
-        else:
-            current_parent = self._BASE_TOTAL_LABEL
+        current_parent = parent_labels[-1] if parent_labels else self._BASE_TOTAL_LABEL
         labels = []
         for ds_index, curr_ds in enumerate(data_sources):
-            if not current_parent in curr_ds:
+            if current_parent not in curr_ds:
                 continue
             label_map = curr_ds[current_parent]
             for child_label, label_info in label_map.items():
@@ -289,9 +286,9 @@ class DiffDataSourceMap(DataSourceMap):
     def has_diff_sublabels(self, top_ds_label: str) -> bool:
         """Checks if first datasource is identical."""
         for label in self.labels():
-            if label.size != 0:
-                if (label.parents and (label.parents[0] == top_ds_label)) or (
+            if (label.parents and (label.parents[0] == top_ds_label)) or (
                     label.name == top_ds_label
                 ):
+                if label.size != 0:
                     return True
         return False

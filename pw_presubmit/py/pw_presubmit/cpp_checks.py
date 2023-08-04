@@ -127,7 +127,7 @@ def include_guard_check(
                         path=path,
                     )
                     return
-                expected = match.group(1)
+                expected = match[1]
 
             second_line = next(iterable, '')
             _LOG.debug('second line %r', second_line)

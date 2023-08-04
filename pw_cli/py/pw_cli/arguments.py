@@ -51,10 +51,11 @@ class ShellCompletion:
     flag: bool = True
 
     def bash_completion(self, text: str) -> List[str]:
-        result: List[str] = []
-        for option_str in self.option_strings:
-            if option_str.startswith(text):
-                result.append(option_str)
+        result: List[str] = [
+            option_str
+            for option_str in self.option_strings
+            if option_str.startswith(text)
+        ]
         return result
 
     def zsh_completion(self, text: str) -> List[str]:
@@ -67,7 +68,7 @@ class ShellCompletion:
                 help_text = self.help if self.help else ''
                 state_str = ''
                 if not self.flag:
-                    state_str = ': :->' + option_str
+                    state_str = f': :->{option_str}'
 
                 result.append(
                     f'({short_and_long_opts}){option_str}[{help_text}]'
@@ -79,15 +80,15 @@ class ShellCompletion:
 def get_options_and_help(
     parser: argparse.ArgumentParser,
 ) -> List[ShellCompletion]:
-    return list(
+    return [
         ShellCompletion(
             option_strings=list(action.option_strings),
             help=action.help,
             choices=list(action.choices) if action.choices else [],
             flag=action.nargs == 0,
         )
-        for action in parser._actions  # pylint: disable=protected-access
-    )
+        for action in parser._actions
+    ]
 
 
 def print_completions_for_option(
@@ -135,7 +136,7 @@ def add_tab_complete_arguments(
     )
     parser.add_argument(
         '--tab-complete-format',
-        choices=list(shell.value for shell in ShellCompletionFormat),
+        choices=[shell.value for shell in ShellCompletionFormat],
         default='bash',
         help='Output format for tab completion results.',
     )

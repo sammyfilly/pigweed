@@ -78,9 +78,7 @@ class Twenty48Game:
         self.start_time = time.time()
         self.max_value = 2
         self.move_count = 0
-        self.board = []
-        for _i in range(self.height):
-            self.board.append([0] * self.width)
+        self.board = [[0] * self.width for _i in range(self.height)]
         self.last_board = list(self.all_cells())
         self.add_random_tiles(2)
 
@@ -89,17 +87,18 @@ class Twenty48Game:
         elapsed_time = int(time.time() - self.start_time)
         minutes = int(elapsed_time / 60.0)
         seconds = elapsed_time % 60
-        fragments: StyleAndTextTuples = []
-        fragments.append(('', '\n'))
-        fragments.append(('', f'Moves: {self.move_count}'))
-        fragments.append(('', '\n'))
-        fragments.append(('', 'Time:  {:0>2}:{:0>2}'.format(minutes, seconds)))
-        fragments.append(('', '\n'))
-        fragments.append(('', f'Max: {self.max_value}'))
-        fragments.append(('', '\n\n'))
-        fragments.append(('', 'Press R to restart\n'))
-        fragments.append(('', '\n'))
-        fragments.append(('', 'Arrow keys to move'))
+        fragments: StyleAndTextTuples = [
+            ('', '\n'),
+            ('', f'Moves: {self.move_count}'),
+            ('', '\n'),
+            ('', 'Time:  {:0>2}:{:0>2}'.format(minutes, seconds)),
+            ('', '\n'),
+            ('', f'Max: {self.max_value}'),
+            ('', '\n\n'),
+            ('', 'Press R to restart\n'),
+            ('', '\n'),
+            ('', 'Arrow keys to move'),
+        ]
         return fragments
 
     def __pt_formatted_text__(self) -> StyleAndTextTuples:
@@ -553,9 +552,4 @@ class Twenty48Pane(FloatingWindowPane, PluginMixin):
         # re-draw.
         # Returning False means no updates required.
 
-        if self.show_pane:
-            # Return true so the game clock is updated.
-            return True
-
-        # Game window is hidden, don't redraw.
-        return False
+        return bool(self.show_pane)

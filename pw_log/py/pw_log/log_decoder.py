@@ -88,9 +88,9 @@ class Log:
         self.thread_name = thread_name
         self.source_name = source_name
         self.file_and_line = file_and_line
-        self.metadata_fields = dict()
+        self.metadata_fields = {}
         if metadata_fields:
-            self.metadata_fields.update(metadata_fields)
+            self.metadata_fields |= metadata_fields
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Log):
@@ -160,7 +160,7 @@ class Log:
     @staticmethod
     def logging_level_to_pw_log_level(logging_log_level: int) -> int:
         """Maps a Python logging level value to a pw_log/levels.h value."""
-        return int(logging_log_level / 10)
+        return logging_log_level // 10
 
 
 def pw_status_code_to_name(
@@ -185,10 +185,10 @@ def pw_status_code_to_name(
     min_status_value = min(status.value for status in pw_status.Status)
 
     def replacement_callback(match: re.Match) -> str:
-        status_code = int(match.group(1))
+        status_code = int(match[1])
         if min_status_value <= status_code <= max_status_value:
             return pw_status.Status(status_code).name
-        return match.group(0)
+        return match[0]
 
     return re.sub(
         pattern=status_pattern, repl=replacement_callback, string=message
@@ -359,7 +359,7 @@ class LogStreamDecoder:
             timestamp = self.timestamp_parser(log_entry_proto.timestamp)
         else:
             timestamp = str(log_entry_proto.timestamp)
-        log = Log(
+        return Log(
             message=message,
             level=line_level_tuple.level,
             flags=log_entry_proto.flags,
@@ -373,16 +373,13 @@ class LogStreamDecoder:
             metadata_fields=metadata_fields,
         )
 
-        return log
-
     def _handle_log_drop_count(self, drop_count: int, reason: str) -> Log:
         log_word = 'logs' if drop_count > 1 else 'log'
-        log = Log(
+        return Log(
             message=f'Dropped {drop_count} {log_word} due to {reason}',
             level=logging.WARNING,
             source_name=self.source_name,
         )
-        return log
 
     def _calculate_dropped_logs(
         self, log_entries_proto: log_pb2.LogEntries

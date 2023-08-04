@@ -121,9 +121,9 @@ def _box(style, left, middle, right, box=tools.make_box('><>')) -> str:
         *style,
         section1=left + ('' if left.endswith(' ') else ' '),
         width1=_LEFT,
-        section2=' ' + middle,
+        section2=f' {middle}',
         width2=WIDTH - _LEFT - _RIGHT - 4,
-        section3=right + ' ',
+        section3=f'{right} ',
         width3=_RIGHT,
     )
 
@@ -154,9 +154,7 @@ class Program(collections.abc.Sequence):
         self.name = name
 
         def ensure_check(step):
-            if isinstance(step, Check):
-                return step
-            return Check(step)
+            return step if isinstance(step, Check) else Check(step)
 
         self._steps: tuple[Check, ...] = tuple(
             {ensure_check(s): None for s in tools.flatten(steps)}
@@ -261,7 +259,7 @@ def archive_cas_artifact(
         with tempfile.NamedTemporaryFile(mode='w+t') as tmp_paths_file:
             json_paths = json.dumps(
                 [
-                    [str(root), str(os.path.relpath(path, root))]
+                    [root, str(os.path.relpath(path, root))]
                     for path in upload_paths
                 ]
             )
@@ -283,8 +281,7 @@ def archive_cas_artifact(
                 raise PresubmitFailure('cas archive failed') from failure
 
             tmp_digest_file.seek(0)
-            uploaded_digest = tmp_digest_file.read()
-            return uploaded_digest
+            return tmp_digest_file.read()
 
 
 class FileFilter:
@@ -508,10 +505,7 @@ class Presubmit:
             summary_items.append(f'{skipped} not run')
         summary = ', '.join(summary_items) or 'nothing was done'
 
-        if failed or skipped:
-            result = PresubmitResult.FAIL
-        else:
-            result = PresubmitResult.PASS
+        result = PresubmitResult.FAIL if failed or skipped else PresubmitResult.PASS
         total = passed + failed + skipped
 
         _LOG.debug(
@@ -789,7 +783,7 @@ def run(  # pylint: disable=too-many-arguments,too-many-locals
         override_gn_args=dict(override_gn_args or {}),
         continue_after_build_error=continue_after_build_error,
         rng_seed=rng_seed,
-        full=bool(base is None),
+        full=base is None,
     )
 
     if only_list_steps:
@@ -1013,10 +1007,7 @@ class Check:
 
         start_time_s = time.time()
         result: PresubmitResult
-        if substep:
-            result = self.run_substep(ctx, substep)
-        else:
-            result = self(ctx)
+        result = self.run_substep(ctx, substep) if substep else self(ctx)
         time_str = _format_time(time.time() - start_time_s)
         _LOG.debug('%s %s', self.name, result.value)
 
@@ -1041,10 +1032,7 @@ class Check:
             result = func(ctx, *args, **kwargs)
             if ctx.failed:
                 return PresubmitResult.FAIL
-            if isinstance(result, PresubmitResult):
-                return result
-            return PresubmitResult.PASS
-
+            return result if isinstance(result, PresubmitResult) else PresubmitResult.PASS
         except PresubmitFailure as failure:
             if str(failure):
                 _LOG.warning('%s', failure)

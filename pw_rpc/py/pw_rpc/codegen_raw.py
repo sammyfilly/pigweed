@@ -105,7 +105,7 @@ class RawCodeGenerator(CodeGenerator):
                 f'Start<{client_call_type(method, "Raw")}>('
             )
 
-            service_client = RPC_NAMESPACE + '::internal::ServiceClient'
+            service_client = f'{RPC_NAMESPACE}::internal::ServiceClient'
             arg = ['std::move(on_next)'] if method.server_streaming() else []
 
             self.indented_list(

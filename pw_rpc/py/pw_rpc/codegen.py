@@ -88,7 +88,7 @@ class CodeGenerator(abc.ABC):
         """Outputs each arg one per line; adds end to teh last arg."""
         with self.indent(4):
             for arg in args[:-1]:
-                self.line(arg + ',')
+                self.line(f'{arg},')
 
             self.line(args[-1] + end)
 
@@ -325,9 +325,7 @@ def _generate_info(
             gen.line('}')
 
             gen.line(
-                'using GeneratedClient = '
-                f'{"::" + namespace if namespace else ""}'
-                f'::pw_rpc::{gen.name()}::{service.name()}::Client;'
+                f'using GeneratedClient = {f"::{namespace}" if namespace else ""}::pw_rpc::{gen.name()}::{service.name()}::Client;'
             )
 
             gen.method_info_specialization(method)

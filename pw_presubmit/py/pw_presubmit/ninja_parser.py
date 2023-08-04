@@ -40,20 +40,15 @@ def _remove_passing_tests(failure_lines: List[str]) -> List[str]:
     test_lines: List[str] = []
     result = []
     for line in failure_lines:
-        if test_lines:
-            if _GOOGLETEST_OK in line:
-                test_lines = []
-            elif _GOOGLETEST_FAILED in line:
-                result.extend(test_lines)
-                test_lines = []
-                result.append(line)
-            else:
-                test_lines.append(line)
-        elif _GOOGLETEST_RUN in line:
+        if test_lines and _GOOGLETEST_OK in line:
+            test_lines = []
+        elif test_lines and _GOOGLETEST_FAILED in line:
+            result.extend(test_lines)
+            test_lines = []
+            result.append(line)
+        elif test_lines or _GOOGLETEST_RUN in line:
             test_lines.append(line)
-        elif _GOOGLETEST_DISABLED in line:
-            pass
-        else:
+        elif _GOOGLETEST_DISABLED not in line:
             result.append(line)
     result.extend(test_lines)
     return result
@@ -77,17 +72,16 @@ def _parse_ninja(ins: IO) -> str:
                 _LOG.debug('next rule started, ending failure block')
                 break
 
-            if re.match(_COLOR_CODES_PREFIX + r'ninja: build stopped:.*', line):
+            if re.match(f'{_COLOR_CODES_PREFIX}ninja: build stopped:.*', line):
                 _LOG.debug('ninja build stopped, ending failure block')
                 break
             failure_lines.append(line)
 
-        else:
-            if re.match(_COLOR_CODES_PREFIX + r'FAILED: (.*)$', line):
-                _LOG.debug('starting failure block')
-                failure_lines.extend([last_line, line])
-            elif 'FAILED' in line:
-                _LOG.debug('not a match')
+        elif re.match(f'{_COLOR_CODES_PREFIX}FAILED: (.*)$', line):
+            _LOG.debug('starting failure block')
+            failure_lines.extend([last_line, line])
+        elif 'FAILED' in line:
+            _LOG.debug('not a match')
         last_line = line
 
     failure_lines = _remove_passing_tests(failure_lines)

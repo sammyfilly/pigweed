@@ -111,8 +111,7 @@ class ZephyrTokenDecoder:
           Tokens, which may be valid (token.ok()) or corrupt (!token.ok())
         """
         for byte in data:
-            token = self.process_byte(byte)
-            if token:
+            if token := self.process_byte(byte):
                 yield token
 
     def process_valid_tokens(self, data: bytes) -> Iterable[Token]:

@@ -189,9 +189,7 @@ class LuciTrigger:
             'ref': 'refs/changes/56/123456/1',
             'gerrit_name': 'pigweed',
             'submitted': True,
-        }
-        change.update(kwargs)
-
+        } | kwargs
         with tempfile.TemporaryDirectory() as tempdir:
             changes_json = Path(tempdir) / 'changes.json'
             with changes_json.open('w') as outs:
@@ -287,9 +285,7 @@ class LuciContext:
             'BUILD_NUMBER': '123',
             'SWARMING_SERVER': 'https://chromium-swarm.appspot.com',
             'SWARMING_TASK_ID': 'cd2dac62d2',
-        }
-        env.update(kwargs)
-
+        } | kwargs
         return LuciContext.create_from_environment(env, {})
 
 
@@ -332,9 +328,7 @@ class PresubmitFailure(Exception):
         path: Optional[Path] = None,
         line: Optional[int] = None,
     ):
-        line_part: str = ''
-        if line is not None:
-            line_part = f'{line}:'
+        line_part = f'{line}:' if line is not None else ''
         super().__init__(
             f'{path}:{line_part} {description}' if path else description
         )
@@ -423,8 +417,7 @@ class PresubmitContext:  # pylint: disable=too-many-instance-attributes
             'luci': None,
             'override_gn_args': {},
             'format_options': FormatOptions(),
-        }
-        presubmit_kwargs.update(kwargs)
+        } | kwargs
         return PresubmitContext(**presubmit_kwargs)
 
     def append_check_command(

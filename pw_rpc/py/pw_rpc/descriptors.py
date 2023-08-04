@@ -285,16 +285,14 @@ class Method:
 
     @property
     def type(self) -> 'Method.Type':
-        if self.server_streaming and self.client_streaming:
-            return self.Type.BIDIRECTIONAL_STREAMING
-
         if self.server_streaming:
-            return self.Type.SERVER_STREAMING
+            if self.client_streaming:
+                return self.Type.BIDIRECTIONAL_STREAMING
 
-        if self.client_streaming:
-            return self.Type.CLIENT_STREAMING
+            else:
+                return self.Type.SERVER_STREAMING
 
-        return self.Type.UNARY
+        return self.Type.CLIENT_STREAMING if self.client_streaming else self.Type.UNARY
 
     def get_request(
         self, proto: Optional[Message], proto_kwargs: Optional[Dict[str, Any]]

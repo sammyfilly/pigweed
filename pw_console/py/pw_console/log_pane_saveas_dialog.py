@@ -56,16 +56,13 @@ class PathValidator(Validator):
 
         if not target_path.parent.exists():
             raise ValidationError(
-                # Set cursor position to the end
-                len(document.text),
-                "Directory doesn't exist: %s" % document.text,
+                len(document.text), f"Directory doesn't exist: {document.text}"
             )
 
         if target_path.is_dir():
             raise ValidationError(
-                # Set cursor position to the end
                 len(document.text),
-                "File input is an existing directory: %s" % document.text,
+                f"File input is an existing directory: {document.text}",
             )
 
 
@@ -238,9 +235,10 @@ class LogPaneSaveAsDialog(ConditionalContainer):
         # Default button style
         button_style = 'class:toolbar-button-inactive'
 
-        fragments = [('class:saveas-dialog-title', 'Save as File', focus)]
-        fragments.append(separator_text)
-
+        fragments = [
+            ('class:saveas-dialog-title', 'Save as File', focus),
+            separator_text,
+        ]
         # Table checkbox
         fragments.extend(
             to_checkbox_with_keybind_indicator(

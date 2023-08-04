@@ -68,23 +68,21 @@ class FilterToolbar(ConditionalContainer):
                 fragments.append(('class:filter-bar-setting', 'NOT '))
 
             if log_filter.field:
-                fragments.append(('class:filter-bar-setting', log_filter.field))
-                fragments.append(space)
-
-            fragments.append(('', filter_text))
-            fragments.append(space)
-
-            fragments.append(
+                fragments.extend((('class:filter-bar-setting', log_filter.field), space))
+            fragments.extend(
                 (
-                    button_style + ' class:filter-bar-delete',
-                    ' (X) ',
-                    functools.partial(
-                        self.mouse_handler_delete_filter, filter_text
+                    ('', filter_text),
+                    space,
+                    (
+                        f'{button_style} class:filter-bar-delete',
+                        ' (X) ',
+                        functools.partial(
+                            self.mouse_handler_delete_filter, filter_text
+                        ),
                     ),
+                    ('class:filter-bar-delimiter', '>'),
                 )
-            )  # type: ignore
-            fragments.append(('class:filter-bar-delimiter', '>'))
-
+            )
             fragments.append(separator)
         return fragments
 

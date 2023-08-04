@@ -150,7 +150,7 @@ class NanopbCodeGenerator(CodeGenerator):
                 f'Start<{client_call}>('
             )
 
-            service_client = RPC_NAMESPACE + '::internal::ServiceClient'
+            service_client = f'{RPC_NAMESPACE}::internal::ServiceClient'
 
             args = [
                 f'{service_client}::client()',
@@ -162,9 +162,7 @@ class NanopbCodeGenerator(CodeGenerator):
             if method.server_streaming():
                 args.append('std::move(on_next)')
 
-            args.append('std::move(on_completed)')
-            args.append('std::move(on_error)')
-
+            args.extend(('std::move(on_completed)', 'std::move(on_error)'))
             if not method.client_streaming():
                 args.append('request')
 

@@ -491,7 +491,7 @@ class SettingsLevel(enum.Enum):
 
     @classmethod
     def all_levels(cls) -> Generator['SettingsLevel', None, None]:
-        return (level for level in cls)
+        return iter(cls)
 
     @classmethod
     def all_not_default(cls) -> Generator['SettingsLevel', None, None]:

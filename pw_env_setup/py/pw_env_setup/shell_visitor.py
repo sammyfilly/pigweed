@@ -84,7 +84,7 @@ class ShellVisitor(_BaseShellVisitor):
         value = action.value
         for var, replacement in self._replacements:
             if var != action.name:
-                value = value.replace(replacement, '${}'.format(var))
+                value = value.replace(replacement, f'${var}')
         return value
 
     def visit_set(self, set):  # pylint: disable=redefined-builtin
@@ -113,7 +113,7 @@ class ShellVisitor(_BaseShellVisitor):
 
     def visit_prepend(self, prepend):
         value = self._apply_replacements(prepend)
-        value = self._join(value, '${}'.format(prepend.name))
+        value = self._join(value, f'${prepend.name}')
         self._outs.write(
             '{name}="{value}"\nexport {name}\n'.format(
                 name=prepend.name, value=value
@@ -122,7 +122,7 @@ class ShellVisitor(_BaseShellVisitor):
 
     def visit_append(self, append):
         value = self._apply_replacements(append)
-        value = self._join('${}'.format(append.name), value)
+        value = self._join(f'${append.name}', value)
         self._outs.write(
             '{name}="{value}"\nexport {name}\n'.format(
                 name=append.name, value=value
@@ -133,18 +133,18 @@ class ShellVisitor(_BaseShellVisitor):
         # TODO(mohrr) use shlex.quote().
         self._outs.write('if [ -z "${PW_ENVSETUP_QUIET:-}" ]; then\n')
         if echo.newline:
-            self._outs.write('  echo "{}"\n'.format(echo.value))
+            self._outs.write(f'  echo "{echo.value}"\n')
         else:
-            self._outs.write('  echo -n "{}"\n'.format(echo.value))
+            self._outs.write(f'  echo -n "{echo.value}"\n')
         self._outs.write('fi\n')
 
     def visit_comment(self, comment):
         for line in comment.value.splitlines():
-            self._outs.write('# {}\n'.format(line))
+            self._outs.write(f'# {line}\n')
 
     def visit_command(self, command):
         # TODO(mohrr) use shlex.quote here?
-        self._outs.write('{}\n'.format(' '.join(command.command)))
+        self._outs.write(f"{' '.join(command.command)}\n")
         if not command.exit_on_error:
             return
 

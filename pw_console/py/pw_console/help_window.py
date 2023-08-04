@@ -239,13 +239,11 @@ class HelpWindow(ConditionalContainer):
             self.last_focused_pane = self.application.focused_window()
             # Set the help window in focus.
             self.application.layout.focus(self.help_text_area)
+        elif self.last_focused_pane:
+            self.application.layout.focus(self.last_focused_pane)
         else:
-            # Restore original focus if possible.
-            if self.last_focused_pane:
-                self.application.layout.focus(self.last_focused_pane)
-            else:
-                # Fallback to focusing on the first window pane.
-                self.application.focus_main_menu()
+            # Fallback to focusing on the first window pane.
+            self.application.focus_main_menu()
 
     def content_width(self) -> int:
         """Return total width of help window."""
@@ -367,9 +365,7 @@ class HelpWindow(ConditionalContainer):
                 self.max_description_width = len(description)
 
             # Get the existing list of keys for this function or make a new one.
-            key_list = self.help_text_sections[section_name].get(
-                description, list()
-            )
+            key_list = self.help_text_sections[section_name].get(description, [])
 
             # Save the name of the key e.g. F1, q, ControlQ, ControlUp
             key_name = ' '.join(

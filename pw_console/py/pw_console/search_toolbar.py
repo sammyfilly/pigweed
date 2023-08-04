@@ -292,11 +292,7 @@ class SearchToolbar(ConditionalContainer):
         separator_text = [('', '  ', focus)]
 
         # Empty text matching the width of the search bar title.
-        fragments = [
-            ('', '        ', focus),
-        ]
-        fragments.extend(separator_text)
-
+        fragments = [('', '        ', focus), *separator_text]
         fragments.extend(
             to_keybind_indicator(
                 'Enter', 'Search', start_search, base_style=button_style
@@ -332,18 +328,13 @@ class SearchToolbar(ConditionalContainer):
         # style here.
         button_style = 'class:toolbar-button-inactive'
 
-        fragments = [
-            # Title
-            ('class:search-bar-title', ' Search ', focus),
-        ]
-        fragments.extend(separator_text)
-
+        fragments = [('class:search-bar-title', ' Search ', focus), *separator_text]
         selected_column_text = [
             (
-                button_style + ' class:search-bar-setting',
-                (self._search_field.title() if self._search_field else 'All'),
+                f'{button_style} class:search-bar-setting',
+                self._search_field.title() if self._search_field else 'All',
                 next_field,
-            ),
+            )
         ]
         fragments.extend(
             to_keybind_indicator(
@@ -370,7 +361,7 @@ class SearchToolbar(ConditionalContainer):
         # Matching Method
         current_matcher_text = [
             (
-                button_style + ' class:search-bar-setting',
+                f'{button_style} class:search-bar-setting',
                 str(self.log_pane.log_view.search_matcher.name),
                 next_matcher,
             )
@@ -415,9 +406,7 @@ class SearchToolbar(ConditionalContainer):
             ('class:search-match-count-dialog-title', ' Match ', focus),
             (
                 '',
-                '{} / {}'.format(
-                    match_number, len(self.log_view.search_matched_lines)
-                ),
+                f'{match_number} / {len(self.log_view.search_matched_lines)}',
                 focus,
             ),
             two_spaces,

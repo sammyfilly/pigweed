@@ -14,6 +14,7 @@
 # the License.
 """Tests for bloaty configuration tooling."""
 
+
 import unittest
 import os
 import logging
@@ -21,9 +22,9 @@ import sys
 from pw_bloat.label import DataSourceMap, Label
 
 LIST_LABELS = [
-    Label(name='main()', size=30, parents=tuple(['FLASH', '.code'])),
-    Label(name='foo()', size=100, parents=tuple(['RAM', '.heap'])),
-    Label(name='bar()', size=220, parents=tuple(['RAM', '.heap'])),
+    Label(name='main()', size=30, parents=('FLASH', '.code')),
+    Label(name='foo()', size=100, parents=('RAM', '.heap')),
+    Label(name='bar()', size=220, parents=('RAM', '.heap')),
 ]
 
 logger = logging.getLogger()
@@ -74,9 +75,9 @@ class LabelStructTest(unittest.TestCase):
     def test_parsing_generator_two_datasource_names(self):
         ds_map = DataSourceMap(['a', 'b'])
         ds_label_list = [
-            Label(name='main()', size=30, parents=tuple(['FLASH'])),
-            Label(name='foo()', size=100, parents=tuple(['RAM'])),
-            Label(name='bar()', size=220, parents=tuple(['RAM'])),
+            Label(name='main()', size=30, parents=('FLASH',)),
+            Label(name='foo()', size=100, parents=('RAM',)),
+            Label(name='bar()', size=220, parents=('RAM',)),
         ]
         for label in ds_label_list:
             ds_map.insert_label_hierachy(
@@ -94,8 +95,8 @@ class LabelStructTest(unittest.TestCase):
                 [label.parents[0], label.parents[1], label.name], label.size
             )
         list_labels_ds_b = [
-            Label(name='.code', size=30, parents=tuple(['FLASH'])),
-            Label(name='.heap', size=320, parents=tuple(['RAM'])),
+            Label(name='.code', size=30, parents=('FLASH',)),
+            Label(name='.heap', size=320, parents=('RAM',)),
         ]
         list_labels_ds_b += [Label(name='total', size=350)]
         for label_hiearchy in ds_map.labels(1):
@@ -109,8 +110,8 @@ class LabelStructTest(unittest.TestCase):
                 [label.parents[0], label.parents[1], label.name], label.size
             )
         list_labels_ds_a = [
-            Label(name='FLASH', size=30, parents=tuple([])),
-            Label(name='RAM', size=320, parents=tuple([])),
+            Label(name='FLASH', size=30, parents=()),
+            Label(name='RAM', size=320, parents=()),
         ]
         list_labels_ds_a += [Label(name='total', size=350)]
         for label_hiearchy in ds_map.labels(0):
@@ -124,8 +125,8 @@ class LabelStructTest(unittest.TestCase):
                 [label.parents[0], label.parents[1], label.name], label.size
             )
         list_labels_ds_a = [
-            Label(name='FLASH', size=30, parents=tuple([])),
-            Label(name='RAM', size=320, parents=tuple([])),
+            Label(name='FLASH', size=30, parents=()),
+            Label(name='RAM', size=320, parents=()),
         ]
         list_labels_ds_a += [Label(name='total', size=350)]
         for label_hiearchy in ds_map.labels(0):
@@ -139,8 +140,8 @@ class LabelStructTest(unittest.TestCase):
                 [label.parents[0], label.parents[1], label.name], label.size
             )
         list_labels_ds_b = [
-            Label(name='.code', size=30, parents=tuple(['FLASH'])),
-            Label(name='.heap', size=320, parents=tuple(['RAM'])),
+            Label(name='.code', size=30, parents=('FLASH',)),
+            Label(name='.heap', size=320, parents=('RAM',)),
         ]
         list_labels_ds_b += [Label(name='total', size=350)]
         for label_hiearchy in ds_map.labels(1):
@@ -167,19 +168,13 @@ class LabelStructTest(unittest.TestCase):
                 name='main()',
                 size=-10,
                 exists_both=True,
-                parents=tuple(['FLASH', '.code']),
+                parents=('FLASH', '.code'),
             ),
             Label(
-                name='foo()',
-                size=-10,
-                exists_both=True,
-                parents=tuple(['RAM', '.heap']),
+                name='foo()', size=-10, exists_both=True, parents=('RAM', '.heap')
             ),
             Label(
-                name='bar()',
-                size=-10,
-                exists_both=True,
-                parents=tuple(['RAM', '.heap']),
+                name='bar()', size=-10, exists_both=True, parents=('RAM', '.heap')
             ),
         ]
 

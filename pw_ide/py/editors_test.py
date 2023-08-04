@@ -44,7 +44,7 @@ class TestDictDeepMerge(unittest.TestCase):
             'foo': 'bar',
         }
 
-        result = dict_deep_merge(dict_b, dict_a, lambda: dict())
+        result = dict_deep_merge(dict_b, dict_a, lambda: {})
         self.assertEqual(result, expected)
 
     def test_invariants_with_dict_implicit_ctor_success(self):
@@ -99,7 +99,7 @@ class TestDictDeepMerge(unittest.TestCase):
         dict_b = OrderedDict({'foo': 'bar'})
 
         with self.assertRaises(TypeError):
-            dict_deep_merge(dict_b, dict_a, lambda: dict())
+            dict_deep_merge(dict_b, dict_a, lambda: {})
 
     # pylint: enable=unnecessary-lambda
 

@@ -63,9 +63,11 @@ class CortexMExceptionAnalyzer:
 
         temp_field_list = []
         if self._cpu_state.HasField('cfsr'):
-            for bit_field in cortex_m_constants.PW_CORTEX_M_CFSR_BIT_FIELDS:
-                if self._cpu_state.cfsr & bit_field.bit_mask:
-                    temp_field_list.append(bit_field)
+            temp_field_list.extend(
+                bit_field
+                for bit_field in cortex_m_constants.PW_CORTEX_M_CFSR_BIT_FIELDS
+                if self._cpu_state.cfsr & bit_field.bit_mask
+            )
         self._active_cfsr_fields = tuple(temp_field_list)
         return self._active_cfsr_fields
 
@@ -90,13 +92,13 @@ class CortexMExceptionAnalyzer:
         """Returns true if the current CPU state indicates a nested fault."""
         if not self.is_fault_active():
             return False
-        if (
-            self._cpu_state.HasField('hfsr')
-            and self._cpu_state.hfsr
-            & cortex_m_constants.PW_CORTEX_M_HFSR_FORCED_MASK
-        ):
-            return True
-        return False
+        return bool(
+            (
+                self._cpu_state.HasField('hfsr')
+                and self._cpu_state.hfsr
+                & cortex_m_constants.PW_CORTEX_M_HFSR_FORCED_MASK
+            )
+        )
 
     def exception_cause(self, show_active_cfsr_fields=True) -> str:
         """Analyzes CPU state to tries and classify the exception.
@@ -112,15 +114,15 @@ class CortexMExceptionAnalyzer:
               memory management fault at 0x00000000 [DACCVIOL] [MMARVALID]
         """
         cause = ''
-        # The CFSR can accumulate multiple exceptions.
-        split_major_cause = lambda cause: cause if not cause else cause + ', '
-
         if self._cpu_state.HasField('cfsr') and self.is_fault_active():
             if (
                 self._cpu_state.cfsr
                 & cortex_m_constants.PW_CORTEX_M_CFSR_USAGE_FAULT_MASK
             ):
                 cause += 'usage fault'
+
+                # The CFSR can accumulate multiple exceptions.
+            split_major_cause = lambda cause: cause if not cause else f'{cause}, '
 
             if (
                 self._cpu_state.cfsr

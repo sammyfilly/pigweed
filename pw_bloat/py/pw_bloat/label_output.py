@@ -71,9 +71,7 @@ class _Align(enum.Enum):
 def get_label_status(curr_label: Label) -> str:
     if curr_label.is_new():
         return 'NEW'
-    if curr_label.is_del():
-        return 'DEL'
-    return ''
+    return 'DEL' if curr_label.is_del() else ''
 
 
 def diff_sign_sizes(size: int, diff_mode: bool) -> str:
@@ -182,7 +180,6 @@ class BloatTableOutput:
         return tuple(diff_list)
 
     def _label_title_row(self) -> List[str]:
-        label_rows = []
         label_cells = ''
         divider_cells = ''
         for width in self._col_widths:
@@ -190,14 +187,11 @@ class BloatTableOutput:
             divider_cells += (self._cs.H.value * width) + self._cs.H.value
         if self._diff_label is not None:
             label_cells = self._diff_label.center(len(label_cells[:-1]), ' ')
-        label_rows.extend(
-            [
-                f"{self._cs.TL.value}{divider_cells[:-1]}{self._cs.TR.value}",
-                f"{self._cs.V.value}{label_cells}{self._cs.V.value}",
-                f"{self._cs.ML.value}{divider_cells[:-1]}{self._cs.MR.value}",
-            ]
-        )
-        return label_rows
+        return [
+            f"{self._cs.TL.value}{divider_cells[:-1]}{self._cs.TR.value}",
+            f"{self._cs.V.value}{label_cells}{self._cs.V.value}",
+            f"{self._cs.ML.value}{divider_cells[:-1]}{self._cs.MR.value}",
+        ]
 
     def create_table(self) -> str:
         """Parse DataSourceMap to create ASCII table."""
@@ -219,15 +213,13 @@ class BloatTableOutput:
 
             has_entries = True
 
-            new_lb_hierachy = tuple(
-                [
-                    *self._get_ds_label_size(curr_label.parents),
-                    self._LabelContent(
-                        curr_label.name,
-                        curr_label.size,
-                        get_label_status(curr_label),
-                    ),
-                ]
+            new_lb_hierachy = (
+                *self._get_ds_label_size(curr_label.parents),
+                self._LabelContent(
+                    curr_label.name,
+                    curr_label.size,
+                    get_label_status(curr_label),
+                ),
             )
             diff_list = self._diff_label_names(
                 curr_lb_hierachy, new_lb_hierachy
@@ -477,7 +469,6 @@ class BloatTableOutput:
         return row_div
 
     def _create_title_row(self) -> Iterable[str]:
-        title_rows = []
         title_cells = ''
         last_cell = False
         for index, curr_name in enumerate(self._col_names):
@@ -486,13 +477,10 @@ class BloatTableOutput:
             title_cells += self._create_cell(
                 curr_name, last_cell, index, _Align.CENTER
             )
-        title_rows.extend(
-            [
-                title_cells,
-                self._row_divider(len(self._col_names), self._cs.HH.value),
-            ]
-        )
-        return title_rows
+        return [
+            title_cells,
+            self._row_divider(len(self._col_names), self._cs.HH.value),
+        ]
 
     def _create_border(self, top: bool, h_div: str):
         """Top or bottom borders of ASCII table."""
@@ -508,16 +496,15 @@ class BloatTableOutput:
                 else:
                     l_div = self._cs.TM.value
                     r_div = ''
+            elif col == 0:
+                l_div = self._cs.BL.value
+                r_div = ''
+            elif col == (len(self._col_names) - 1):
+                l_div = self._cs.BM.value
+                r_div = self._cs.BR.value
             else:
-                if col == 0:
-                    l_div = self._cs.BL.value
-                    r_div = ''
-                elif col == (len(self._col_names) - 1):
-                    l_div = self._cs.BM.value
-                    r_div = self._cs.BR.value
-                else:
-                    l_div = self._cs.BM.value
-                    r_div = ''
+                l_div = self._cs.BM.value
+                r_div = ''
 
             row_div += f"{l_div}{self._col_widths[col] * h_div}{r_div}"
         return row_div
@@ -552,10 +539,10 @@ class RstOutput:
     def _label_status_unchanged(self, parent_lb_name: str) -> bool:
         """Determines if parent label has no status change in diff mode."""
         for curr_lb in self._data_source_map.labels():
-            if curr_lb.size != 0:
-                if (
+            if (
                     curr_lb.parents and (parent_lb_name == curr_lb.parents[0])
                 ) or (curr_lb.name == parent_lb_name):
+                if curr_lb.size != 0:
                     if get_label_status(curr_lb) != '':
                         return False
         return True
@@ -617,7 +604,7 @@ class RstOutput:
             curr_row = []
 
         # No size difference.
-        if len(table_rows) == 0:
+        if not table_rows:
             table_rows.extend(
                 [f'\n   * - {self._table_label}', '     - (ALL)', '     - 0']
             )

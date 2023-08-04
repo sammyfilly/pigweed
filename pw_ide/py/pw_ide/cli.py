@@ -93,8 +93,8 @@ class SphinxStripper:
         )
 
         if match is not None:
-            self.directive = match.group('directive')
-            self.tag = match.group('tag')
+            self.directive = match['directive']
+            self.tag = match['tag']
             self.state = SphinxStripperState.COLLECTING
         else:
             self.handled_lines.append(line)
@@ -103,7 +103,7 @@ class SphinxStripper:
         # Collect lines associated with a directive, including blank lines in
         # the middle of the directive text, but not the blank line between the
         # directive and the start of its text.
-        if not (line.strip() == '' and len(self.lines_to_handle) == 0):
+        if line.strip() != '' or len(self.lines_to_handle) != 0:
             self.lines_to_handle.append(line)
 
     def handle_lines(self, line: str = '') -> None:
@@ -125,12 +125,8 @@ class SphinxStripper:
 
         else:
             if self.state == SphinxStripperState.COLLECTING:
-                # Assume that indented text below the directive is associated
-                # with the directive.
-                if line.strip() == '' or line[0] in (' ', '\t'):
+                if not line.strip() or line[0] in (' ', '\t'):
                     self.collect_lines(line)
-                # When we encounter non-indented text, we're done with this
-                # directive.
                 else:
                     self.state = SphinxStripperState.HANDLING
 
@@ -173,7 +169,7 @@ class RawDescriptionSphinxStrippedHelpFormatter(
         # The space at the end prevents the final blank line from being stripped
         # by argparse, which provides breathing room between the text and the
         # prompt.
-        return sphinx_stripper.result() + ' '
+        return f'{sphinx_stripper.result()} '
 
     def _format_text(self, text: str) -> str:
         # This overrides an arparse method that is not technically a public API.
@@ -182,22 +178,21 @@ class RawDescriptionSphinxStrippedHelpFormatter(
     def _handle_directive_code_block(  # pylint: disable=no-self-use
         self, tag: str, lines: List[str]
     ) -> List[str]:
-        if tag == 'bash':
-            processed_lines = []
+        if tag != 'bash':
+            return lines
+        processed_lines = []
 
-            for line in lines:
-                if line.strip() == '':
-                    processed_lines.append(line)
-                else:
-                    stripped_line = line.lstrip()
-                    indent = len(line) - len(stripped_line)
-                    spaces = ' ' * indent
-                    processed_line = f'{spaces}$ {stripped_line}'
-                    processed_lines.append(processed_line)
+        for line in lines:
+            if line.strip() == '':
+                processed_lines.append(line)
+            else:
+                stripped_line = line.lstrip()
+                indent = len(line) - len(stripped_line)
+                spaces = ' ' * indent
+                processed_line = f'{spaces}$ {stripped_line}'
+                processed_lines.append(processed_line)
 
-            return processed_lines
-
-        return lines
+        return processed_lines
 
 
 class _ParserAdder(Protocol):
@@ -232,8 +227,8 @@ def _parser_adder(subcommand_parser) -> _ParserAdder:
     """
 
     def _add_parser(
-        subcommand_handler: Callable[..., None], *args, **kwargs
-    ) -> argparse.ArgumentParser:
+            subcommand_handler: Callable[..., None], *args, **kwargs
+        ) -> argparse.ArgumentParser:
         doc = _ParsedDocstring(subcommand_handler)
         default_kwargs = dict(
             # Displayed in list of subcommands
@@ -247,7 +242,7 @@ def _parser_adder(subcommand_parser) -> _ParserAdder:
             formatter_class=RawDescriptionSphinxStrippedHelpFormatter,
         )
 
-        new_kwargs = {**default_kwargs, **kwargs}
+        new_kwargs = default_kwargs | kwargs
         parser = subcommand_parser.add_parser(*args, **new_kwargs)
         parser.set_defaults(func=subcommand_handler)
         return parser
@@ -361,8 +356,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
 
 
 def _parse_args() -> argparse.Namespace:
-    args = _build_argument_parser().parse_args()
-    return args
+    return _build_argument_parser().parse_args()
 
 
 def _dispatch_command(func: Callable, **kwargs: Dict[str, Any]) -> int:

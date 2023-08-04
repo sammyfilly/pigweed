@@ -20,10 +20,10 @@ import os
 def _make_color(*codes):
     # Apply all the requested ANSI color codes. Note that this is unbalanced
     # with respect to the reset, which only requires a '0' to erase all codes.
-    start = ''.join('\033[{}m'.format(code) for code in codes)
+    start = ''.join(f'\033[{code}m' for code in codes)
     reset = '\033[0m'
 
-    return staticmethod(lambda msg: u'{}{}{}'.format(start, msg, reset))
+    return staticmethod(lambda msg: f'{start}{msg}{reset}')
 
 
 class Color:  # pylint: disable=too-few-public-methods

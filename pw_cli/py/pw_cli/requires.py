@@ -26,6 +26,7 @@ requirement on internal-project:1234.
 For more see http://go/pigweed-ci-cq-intro.
 """
 
+
 import argparse
 import json
 import logging
@@ -38,7 +39,7 @@ import uuid
 
 HELPER_GERRIT = 'pigweed-internal'
 HELPER_PROJECT = 'requires-helper'
-HELPER_REPO = 'sso://{}/{}'.format(HELPER_GERRIT, HELPER_PROJECT)
+HELPER_REPO = f'sso://{HELPER_GERRIT}/{HELPER_PROJECT}'
 
 # Pass checks that look for "DO NOT ..." and block submission.
 _DNS = ' '.join(
@@ -120,13 +121,11 @@ def create_commit(requires_dir: Path, requirements) -> None:
     _run_command(['git', 'add', path], cwd=requires_dir)
 
     commit_message = [
-        f'{_DNS} {change_id[0:10]}\n\n',
+        f'{_DNS} {change_id[:10]}\n\n',
         '',
         f'Change-Id: I{change_id}',
     ]
-    for req in requirements:
-        commit_message.append(f'Requires: {req}')
-
+    commit_message.extend(f'Requires: {req}' for req in requirements)
     _LOG.debug('message %s', commit_message)
     _run_command(
         ['git', 'commit', '-m', '\n'.join(commit_message)],
@@ -157,7 +156,7 @@ def push_commit(requires_dir: Path, push=True) -> str:
     match = regex.search(output)
     if not match:
         raise ValueError(f"invalid output from 'git push': {output}")
-    change_num = match.group('num')
+    change_num = match['num']
     _LOG.info('created %s change %s', HELPER_PROJECT, change_num)
     return f'{HELPER_GERRIT}:{change_num}'
 

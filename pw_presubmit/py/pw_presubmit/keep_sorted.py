@@ -77,14 +77,8 @@ class KeepSortedContext:
         if not self.fix:
             self.failed = True
 
-        line_part: str = ''
-        if line is not None:
-            line_part = f'{line}:'
-
-        log = _LOG.error
-        if self.fix:
-            log = _LOG.warning
-
+        line_part = f'{line}:' if line is not None else ''
+        log = _LOG.warning if self.fix else _LOG.error
         if path:
             log('%s:%s %s', path, line_part, description)
         else:
@@ -190,7 +184,7 @@ class _FileSorter:
             def strip_ignored_prefixes(val):
                 """Remove one ignored prefix from val, if present."""
                 wo_white = val[0].lstrip()
-                white = val[0][0 : -len(wo_white)]
+                white = val[0][:-len(wo_white)]
                 for prefix in block.ignored_prefixes:
                     if wo_white.startswith(prefix):
                         return (f'{white}{wo_white[len(prefix):]}', val[1])
@@ -265,8 +259,7 @@ class _FileSorter:
                 block.allow_dupes = bool(_ALLOW_DUPES.search(line))
                 _LOG.debug('allow_dupes: %s', block.allow_dupes)
 
-                match = _IGNORE_PREFIX.search(line)
-                if match:
+                if match := _IGNORE_PREFIX.search(line):
                     block.ignored_prefixes = match.group(1).split(',')
 
                     # We want to check the longest prefixes first, in case one
@@ -274,8 +267,7 @@ class _FileSorter:
                     block.ignored_prefixes.sort(key=lambda x: (-len(x), x))
                 _LOG.debug('ignored_prefixes: %r', block.ignored_prefixes)
 
-                match = _STICKY_COMMENTS.search(line)
-                if match:
+                if match := _STICKY_COMMENTS.search(line):
                     if match.group(1) == 'no':
                         block.sticky_comments = ()
                     else:
@@ -367,8 +359,8 @@ def _process_files(
             sorter = _FileSorter(ctx, path, errors)
 
             sorter.sort()
-            if sorter.changed:
-                if fix:
+            if fix:
+                if sorter.changed:
                     sorter.write()
 
         except KeepSortedParsingError as exc:
@@ -400,9 +392,7 @@ def presubmit_check(ctx: presubmit.PresubmitContext) -> None:
     """Presubmit check that ensures specified lists remain sorted."""
 
     ctx.paths = presubmit_context.apply_exclusions(ctx)
-    errors = _process_files(ctx)
-
-    if errors:
+    if errors := _process_files(ctx):
         _print_howto_fix(list(errors.keys()))
 
 

@@ -108,10 +108,10 @@ def insert_linebreaks(
                     # Reset line width to zero
                     line_width = 0
 
-    # Check if the string ends in a final line break
-    last_fragment_style = fragments[-1][0]
     last_fragment_text = fragments[-1][1]
     if not last_fragment_text.endswith('\n'):
+        # Check if the string ends in a final line break
+        last_fragment_style = fragments[-1][0]
         # Add a line break if none exists
         fragments.append((last_fragment_style, '\n'))
         line_height += 1

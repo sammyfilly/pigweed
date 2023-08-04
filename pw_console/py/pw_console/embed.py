@@ -216,7 +216,7 @@ class PwConsoleEmbed:
         """
 
         # Don't modify completion if empty.
-        if len(word_meta_dict) == 0:
+        if not word_meta_dict:
             return
 
         sentences: List[str] = list(word_meta_dict.keys())

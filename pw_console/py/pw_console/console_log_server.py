@@ -62,11 +62,8 @@ class ConsoleLogHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             return
 
         content: str = self.html_files[path].encode('utf-8')
-        content_type = 'application/octet-stream'
         mime_guess, _ = mimetypes.guess_type(Path(path).name)
-        if mime_guess:
-            content_type = mime_guess
-
+        content_type = mime_guess if mime_guess else 'application/octet-stream'
         self.send_response(http.server.HTTPStatus.OK)
         self.send_header('Content-type', content_type)
         self.send_header('Content-Length', str(len(content)))

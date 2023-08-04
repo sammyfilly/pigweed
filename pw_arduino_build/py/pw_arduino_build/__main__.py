@@ -271,18 +271,15 @@ def show_command(args, builder):
         show_command_print_string_list(args, builder.core_cpp_files())
 
     elif args.variant_c_files:
-        vfiles = builder.variant_c_files()
-        if vfiles:
+        if vfiles := builder.variant_c_files():
             show_command_print_string_list(args, vfiles)
 
     elif args.variant_s_files:
-        vfiles = builder.variant_s_files()
-        if vfiles:
+        if vfiles := builder.variant_s_files():
             show_command_print_string_list(args, vfiles)
 
     elif args.variant_cpp_files:
-        vfiles = builder.variant_cpp_files()
-        if vfiles:
+        if vfiles := builder.variant_cpp_files():
             show_command_print_string_list(args, vfiles)
 
 
@@ -298,22 +295,22 @@ def add_common_parser_args(
     parser.add_argument(
         "--serial-port",
         default=serial_port,
-        help="Serial port for flashing. Default: '{}'".format(serial_port),
+        help=f"Serial port for flashing. Default: '{serial_port}'",
     )
     parser.add_argument(
         "--build-path",
         default=build_path,
-        help="Build directory. Default: '{}'".format(build_path),
+        help=f"Build directory. Default: '{build_path}'",
     )
     parser.add_argument(
         "--project-path",
         default=project_path,
-        help="Project directory. Default: '{}'".format(project_path),
+        help=f"Project directory. Default: '{project_path}'",
     )
     parser.add_argument(
         "--project-source-path",
         default=project_source_path,
-        help="Project directory. Default: '{}'".format(project_source_path),
+        help=f"Project directory. Default: '{project_source_path}'",
     )
     parser.add_argument(
         "--library-path",
@@ -325,7 +322,7 @@ def add_common_parser_args(
     parser.add_argument(
         "--build-project-name",
         default=build_project_name,
-        help="Project name. Default: '{}'".format(build_project_name),
+        help=f"Project name. Default: '{build_project_name}'",
     )
     parser.add_argument(
         "--board", required=True, help="Name of the board to use."
@@ -361,12 +358,13 @@ def check_for_missing_args(args):
 
 # TODO(tonymd): These defaults don't make sense anymore and should be removed.
 def get_default_options():
-    defaults = {}
-    defaults["build_path"] = os.path.realpath(
-        os.path.expanduser(
-            os.path.expandvars(os.path.join(os.getcwd(), "build"))
+    defaults = {
+        "build_path": os.path.realpath(
+            os.path.expanduser(
+                os.path.expandvars(os.path.join(os.getcwd(), "build"))
+            )
         )
-    )
+    }
     defaults["project_path"] = os.path.realpath(
         os.path.expanduser(os.path.expandvars(os.getcwd()))
     )

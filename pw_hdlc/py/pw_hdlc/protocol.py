@@ -67,10 +67,7 @@ def decode_address(frame: bytes) -> Tuple[int, int]:
         if byte & 0x1 == 0x1:
             break
 
-    if result > MAX_ADDRESS:
-        return -1, 0
-
-    return result, length
+    return (-1, 0) if result > MAX_ADDRESS else (result, length)
 
 
 class UFrameControl:
