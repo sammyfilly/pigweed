@@ -133,10 +133,7 @@ def _parse_memory_regions(parsed_elf_file: elffile.ELFFile) -> Optional[Dict]:
 
         name = match.group('name')
         limit = match.group('limit')
-        if match.group('index'):
-            index = int(match.group('index'))
-        else:
-            index = 0
+        index = int(match.group('index')) if match.group('index') else 0
         if name not in memory_regions:
             memory_regions[name] = {}
         memory_region = memory_regions[name]
@@ -313,38 +310,48 @@ def map_segments_to_memory_regions(
 
 
 def generate_memoryregions_data_source(segment_to_memory_region: Dict) -> str:
-    output: List[str] = []
-    output.append('custom_data_source: {')
-    output.append('  name: "memoryregions"')
-    output.append('  base_data_source: "segments"')
+    output: List[str] = [
+        'custom_data_source: {',
+        '  name: "memoryregions"',
+        '  base_data_source: "segments"',
+    ]
     for segment_index, memory_region in segment_to_memory_region.items():
         output.append('  rewrite: {')
-        segment_filter = r'^LOAD ' + f'#{segment_index}' + r' \\[.*\\]$'
-        output.append(f'    pattern:"{segment_filter}"')
-        output.append(f'    replacement:"{memory_region}"')
-        output.append('  }')
-    output.append('  rewrite: {')
-    output.append('    pattern:".*"')
-    output.append('    replacement:"Not resident in memory"')
-    output.append('  }')
-    output.append('}')
+        segment_filter = f'^LOAD #{segment_index}' + r' \\[.*\\]$'
+        output.extend(
+            (
+                f'    pattern:"{segment_filter}"',
+                f'    replacement:"{memory_region}"',
+                '  }',
+            )
+        )
+    output.extend(
+        (
+            '  rewrite: {',
+            '    pattern:".*"',
+            '    replacement:"Not resident in memory"',
+            '  }',
+            '}',
+        )
+    )
     return '\n'.join(output) + '\n'
 
 
 def generate_utilization_data_source() -> str:
-    output: List[str] = []
-    output.append('custom_data_source: {')
-    output.append('  name:"utilization"')
-    output.append('  base_data_source:"sections"')
-    output.append('  rewrite: {')
-    output.append('    pattern:"unused_space"')
-    output.append('    replacement:"Free space"')
-    output.append('  }')
-    output.append('  rewrite: {')
-    output.append('    pattern:".*"')
-    output.append('    replacement:"Used space"')
-    output.append('  }')
-    output.append('}')
+    output: List[str] = [
+        'custom_data_source: {',
+        '  name:"utilization"',
+        '  base_data_source:"sections"',
+        '  rewrite: {',
+        '    pattern:"unused_space"',
+        '    replacement:"Free space"',
+        '  }',
+        '  rewrite: {',
+        '    pattern:".*"',
+        '    replacement:"Used space"',
+        '  }',
+        '}',
+    ]
     return '\n'.join(output) + '\n'
 
 
@@ -369,18 +376,17 @@ def generate_bloaty_config(
     result = [False, False]
 
     if enable_memoryregions:
-        # Enable the "memoryregions" data_source if the user provided the
-        # required pw_bloat specific symbols in their linker script.
-        segment_to_memory_region = _get_segments_to_memory_region_map(elf_file)
-        if not segment_to_memory_region:
-            _LOG.info('memoryregions data_source is not provided')
-        else:
+        if segment_to_memory_region := _get_segments_to_memory_region_map(
+            elf_file
+        ):
             _LOG.info('memoryregions data_source is provided')
             out_file.write(
                 generate_memoryregions_data_source(segment_to_memory_region)
             )
             result[0] = True
 
+        else:
+            _LOG.info('memoryregions data_source is not provided')
     if enable_utilization:
         _LOG.info('utilization data_source is provided')
         out_file.write(generate_utilization_data_source())

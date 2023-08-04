@@ -61,8 +61,7 @@ def _parse_ninja_variables(target_ninja_file: Path) -> Dict[str, str]:
 
     with target_ninja_file.open() as fd:
         for line in fd:
-            match = _NINJA_VARIABLE.match(line)
-            if match:
+            if match := _NINJA_VARIABLE.match(line):
                 variables[match.group(1)] = line[match.end() :].strip()
 
     return variables
@@ -166,8 +165,7 @@ def _check_results(
 
     no_color = _ANSI_ESCAPE_SEQUENCES.sub('', stderr)
 
-    failed = [e for e in expectations if not e.pattern.search(no_color)]
-    if failed:
+    if failed := [e for e in expectations if not e.pattern.search(no_color)]:
         _start_failure(test, command)
         _LOG.error(
             'Compilation with %s failed, but the output did not '
@@ -237,7 +235,7 @@ def _main(
         return 2
 
     variables = {key: '' for key in _EXPECTED_GN_VARS}
-    variables.update(_parse_ninja_variables(target_ninja))
+    variables |= _parse_ninja_variables(target_ninja)
 
     variables['out'] = str(
         target_ninja.parent / f'{target_ninja.stem}.compile_fail_test.out'

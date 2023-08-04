@@ -155,14 +155,10 @@ def _sanitize_path(
             return False
 
     if is_relative_to(resolved_path, project_root):
-        return f'{project_root_prefix}/' + str(
-            resolved_path.relative_to(project_root)
-        )
+        return f'{project_root_prefix}/{str(resolved_path.relative_to(project_root))}'
 
     if is_relative_to(resolved_path, user_home):
-        return f'{user_home_prefix}/' + str(
-            resolved_path.relative_to(user_home)
-        )
+        return f'{user_home_prefix}/{str(resolved_path.relative_to(user_home))}'
 
     # Path is not in the project root or user home, so just return it as is.
     return path
@@ -242,15 +238,13 @@ class ShellModifier(ABC):
         home = self.user_home
 
         # Set env vars
-        for var_name, value in json_file_options.get('set', dict()).items():
+        for var_name, value in json_file_options.get('set', {}).items():
             if value is not None:
                 value = _sanitize_path(value, root, home) if sanitize else value
                 self.set_variable(var_name, value)
 
         # Prepend & append env vars
-        for var_name, mode_changes in json_file_options.get(
-            'modify', dict()
-        ).items():
+        for var_name, mode_changes in json_file_options.get('modify', {}).items():
             for mode_name, values in mode_changes.items():
                 if mode_name in ['prepend', 'append']:
                     modify_variable = self.prepend_variable
@@ -442,9 +436,7 @@ def main() -> int:
         ).modify_env(config_file_path, args.sanitize)
     except (FileNotFoundError, json.JSONDecodeError):
         sys.stderr.write(
-            'Unable to read file: {}\n'
-            'Please run this in bash or zsh:\n'
-            '  . ./bootstrap.sh\n'.format(str(config_file_path))
+            f'Unable to read file: {str(config_file_path)}\nPlease run this in bash or zsh:\n  . ./bootstrap.sh\n'
         )
 
         sys.exit(1)

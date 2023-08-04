@@ -93,9 +93,7 @@ class WindowPaneToolbar:
         if self.focus_mouse_handler:
             separator_text = [('', '  ', self.focus_mouse_handler)]
 
-        fragments = []
-        fragments.extend(separator_text)
-
+        fragments = list(separator_text)
         for button in self.buttons:
             on_click_handler = None
             if button.mouse_handler:
@@ -136,33 +134,29 @@ class WindowPaneToolbar:
         fragments = []
         if not has_focus(self.focus_check_container.__pt_container__())():
             if self.click_to_focus_text:
-                fragments.append(
+                fragments.extend(
                     (
-                        'class:toolbar-button-inactive '
-                        'class:toolbar-button-decoration',
-                        ' ',
-                        self.focus_mouse_handler,
-                    )
-                )
-                fragments.append(
-                    (
-                        'class:toolbar-button-inactive class:keyhelp',
-                        self.click_to_focus_text,
-                        self.focus_mouse_handler,
-                    )
-                )
-                fragments.append(
-                    (
-                        'class:toolbar-button-inactive '
-                        'class:toolbar-button-decoration',
-                        ' ',
-                        self.focus_mouse_handler,
+                        (
+                            'class:toolbar-button-inactive '
+                            'class:toolbar-button-decoration',
+                            ' ',
+                            self.focus_mouse_handler,
+                        ),
+                        (
+                            'class:toolbar-button-inactive class:keyhelp',
+                            self.click_to_focus_text,
+                            self.focus_mouse_handler,
+                        ),
+                        (
+                            'class:toolbar-button-inactive '
+                            'class:toolbar-button-decoration',
+                            ' ',
+                            self.focus_mouse_handler,
+                        ),
                     )
                 )
         if self.subtitle:
-            fragments.append(
-                ('', '  {} '.format(self.subtitle()), self.focus_mouse_handler)
-            )
+            fragments.append(('', f'  {self.subtitle()} ', self.focus_mouse_handler))
         return fragments
 
     def get_resize_handle(self):

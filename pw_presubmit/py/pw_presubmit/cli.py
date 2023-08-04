@@ -155,7 +155,7 @@ def _add_programs_arguments(
                 f'Valid Steps:\n{all_step_names}'
             )
 
-        return list(all_steps[name] for name in filtered_step_names)
+        return [all_steps[name] for name in filtered_step_names]
 
     parser.add_argument(
         '--step',

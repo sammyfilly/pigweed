@@ -64,7 +64,7 @@ class GitRepoNotFound(Exception):
 def _installed_packages(venv_python):
     cmd = (venv_python, '-m', 'pip', '--disable-pip-version-check', 'list')
     output = subprocess.check_output(cmd).splitlines()
-    return set(x.split()[0].lower() for x in output[2:])
+    return {x.split()[0].lower() for x in output[2:]}
 
 
 def _required_packages(requirements):
@@ -152,14 +152,12 @@ def _check_python_install_permissions(python):
             for file_path in os.listdir(lib2to3_path)
             if '.pickle' in file_path
         )
-    try:
+    with contextlib.suppress(PermissionError):
         for pickle_file in pickle_file_paths:
             pickle_full_path = os.path.join(lib2to3_path, pickle_file)
             os.chmod(
                 pickle_full_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP
             )
-    except PermissionError:
-        pass
 
 
 def _flatten(*items):
@@ -167,8 +165,7 @@ def _flatten(*items):
 
     for item in items:
         if isinstance(item, (list, tuple)):
-            for i in _flatten(*item):
-                yield i
+            yield from _flatten(*item)
         else:
             yield item
 
@@ -357,11 +354,7 @@ def install(  # pylint: disable=too-many-arguments,too-many-locals,too-many-stat
         )
 
     def install_packages(gn_target):
-        if gn_out_dir is None:
-            build_dir = os.path.join(venv_path, 'gn')
-        else:
-            build_dir = gn_out_dir
-
+        build_dir = os.path.join(venv_path, 'gn') if gn_out_dir is None else gn_out_dir
         env_log = 'env-{}.log'.format(gn_target.name)
         env_log_path = os.path.join(venv_path, env_log)
         with open(env_log_path, 'w') as outs:

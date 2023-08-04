@@ -110,8 +110,7 @@ def detect_boards(arduino_package_path=False) -> list:
         log_subprocess_output(logging.ERROR, process.stdout)
         _LOG.error('')
     for line in process.stdout.decode("utf-8", errors="replace").splitlines():
-        device_match_result = teensy_device_line_regex.match(line)
-        if device_match_result:
+        if device_match_result := teensy_device_line_regex.match(line):
             teensy_device = device_match_result.groupdict()
             boards.append(
                 BoardInfo(

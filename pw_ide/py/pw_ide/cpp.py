@@ -196,7 +196,7 @@ class CppIdeFeaturesState:
         return self.targets[index]
 
     def __iter__(self) -> Generator[CppIdeFeaturesTarget, None, None]:
-        return (target for target in self.targets.values())
+        return iter(self.targets.values())
 
     @contextmanager
     def _file(self) -> Generator[CppIdeFeaturesData, None, None]:
@@ -359,13 +359,10 @@ def path_to_executable(
         _LOG.debug("Invalid executable path. The path was an empty string.")
         return None
 
-    # Determine if the executable name matches unsupported drivers.
-    is_supported_driver = True
-
-    for unsupported_executable in _UNSUPPORTED_TOOLCHAIN_EXECUTABLES:
-        if unsupported_executable in maybe_path.name:
-            is_supported_driver = False
-
+    is_supported_driver = all(
+        unsupported_executable not in maybe_path.name
+        for unsupported_executable in _UNSUPPORTED_TOOLCHAIN_EXECUTABLES
+    )
     if not is_supported_driver:
         _LOG.debug(
             "Invalid executable path. This is not a supported driver: %s", exe
@@ -640,29 +637,24 @@ class CppCompileCommand:
         )
 
     def as_dict(self) -> CppCompileCommandDict:
+        if self.command is None:
+            raise NotImplementedError(
+                'Compile commands without \'command\' ' 'are not supported yet.'
+            )
+
         base_compile_command_dict: BaseCppCompileCommandDict = {
             'file': self.file,
             'directory': self.directory,
             'output': self.output,
         }
 
-        # TODO(chadnorvell): Support "arguments". The spec requires that a
-        # We don't support "arguments" at all right now. When we do, we should
-        # preferentially include "arguments" only, and only include "command"
-        # when "arguments" is not present.
-        if self.command is not None:
-            compile_command_dict: CppCompileCommandDictWithCommand = {
-                'command': self.command,
-                # Unfortunately dict spreading doesn't work with mypy.
-                'file': base_compile_command_dict['file'],
-                'directory': base_compile_command_dict['directory'],
-                'output': base_compile_command_dict['output'],
-            }
-        else:
-            raise NotImplementedError(
-                'Compile commands without \'command\' ' 'are not supported yet.'
-            )
-
+        compile_command_dict: CppCompileCommandDictWithCommand = {
+            'command': self.command,
+            # Unfortunately dict spreading doesn't work with mypy.
+            'file': base_compile_command_dict['file'],
+            'directory': base_compile_command_dict['directory'],
+            'output': base_compile_command_dict['output'],
+        }
         return compile_command_dict
 
 
@@ -695,9 +687,7 @@ def _infer_target_pos(target_glob: str) -> List[int]:
     for pos, token in enumerate(tokens):
         if token == '?':
             positions.append(pos)
-        elif token == '*':
-            pass
-        else:
+        elif token != '*':
             raise ValueError(f'Invalid target inference token: {token}')
 
     return positions
@@ -773,7 +763,7 @@ class CppCompilationDatabase:
         return self._db[index]
 
     def __iter__(self) -> Generator[CppCompileCommand, None, None]:
-        return (compile_command for compile_command in self._db)
+        return iter(self._db)
 
     @property
     def file_hash(self) -> str:
@@ -971,7 +961,7 @@ class CppCompilationDatabasesMap:
 
     def __init__(self, settings: PigweedIdeSettings):
         self.settings = settings
-        self._dbs: Dict[str, CppCompilationDatabase] = dict()
+        self._dbs: Dict[str, CppCompilationDatabase] = {}
 
     def __len__(self) -> int:
         return len(self._dbs)
@@ -1097,7 +1087,7 @@ class CppCompilationDatabasesMap:
         the ``settings`` value to be the same between all of the provided
         ``CppCompilationDatabases`` objects.
         """
-        if len(db_sets) == 0:
+        if not db_sets:
             raise ValueError(
                 'At least one set of compilation databases is required.'
             )
@@ -1153,10 +1143,10 @@ class ClangdSettings:
                 [str(self.clangd_path), *self.arguments], indent=2
             )
 
-        if system.lower() in ['cmd', 'batch']:
+        if system.lower() in {'cmd', 'batch'}:
             return make_command('`')
 
-        if system.lower() in ['powershell', 'pwsh']:
+        if system.lower() in {'powershell', 'pwsh'}:
             return make_command('^')
 
         if system.lower() == 'windows':

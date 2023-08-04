@@ -33,13 +33,12 @@ def start_fake_logger(lines, log_thread_entry, log_thread_loop):
     test_log_thread = Thread(target=log_thread_entry, args=(), daemon=True)
     test_log_thread.start()
 
-    background_log_task = asyncio.run_coroutine_threadsafe(
+    return asyncio.run_coroutine_threadsafe(
         # This function will be executed in a separate thread.
         log_forever(fake_log_messages),
         # Using this asyncio event loop.
         log_thread_loop,
-    )  # type: ignore
-    return background_log_task
+    )
 
 
 def prepare_fake_logs(lines) -> List[Tuple[str, Dict]]:
@@ -50,9 +49,8 @@ def prepare_fake_logs(lines) -> List[Tuple[str, Dict]]:
             continue
 
         keyboard_key = ''
-        search = key_regex.search(line)
-        if search:
-            keyboard_key = search.group(1)
+        if search := key_regex.search(line):
+            keyboard_key = search[1]
 
         fake_logs.append((line, {'keys': keyboard_key}))
     return fake_logs

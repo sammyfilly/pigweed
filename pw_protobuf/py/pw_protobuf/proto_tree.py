@@ -217,19 +217,19 @@ class ProtoNode(abc.ABC):
 
     def pwpb_struct(self) -> str:
         """Name of the pw_protobuf struct for this proto."""
-        return '::' + self.cpp_namespace() + '::Message'
+        return f'::{self.cpp_namespace()}::Message'
 
     def pwpb_table(self) -> str:
         """Name of the pw_protobuf table constant for this proto."""
-        return '::' + self.cpp_namespace() + '::kMessageFields'
+        return f'::{self.cpp_namespace()}::kMessageFields'
 
     def nanopb_fields(self) -> str:
         """Name of the Nanopb variable that represents the proto fields."""
-        return self._nanopb_name() + '_fields'
+        return f'{self._nanopb_name()}_fields'
 
     def nanopb_struct(self) -> str:
         """Name of the Nanopb struct for this proto."""
-        return '::' + self._nanopb_name()
+        return f'::{self._nanopb_name()}'
 
     def _nanopb_name(self) -> str:
         name = '_'.join(self._attr_hierarchy(lambda node: node.name(), None))
@@ -286,8 +286,7 @@ class ProtoNode(abc.ABC):
         """
         if not self._supports_child(child):
             raise ValueError(
-                'Invalid child %s for node of type %s'
-                % (child.type(), self.type())
+                f'Invalid child {child.type()} for node of type {self.type()}'
             )
 
         # pylint: disable=protected-access
@@ -320,8 +319,7 @@ class ProtoNode(abc.ABC):
         """Iterates depth-first through all nodes in this node's subtree."""
         yield self
         for child_iterator in self._children.values():
-            for child in child_iterator:
-                yield child
+            yield from child_iterator
 
     def _attr_hierarchy(
         self,
@@ -407,9 +405,7 @@ class ProtoMessage(ProtoNode):
         self._fields.append(field)
 
     def _supports_child(self, child: ProtoNode) -> bool:
-        return (
-            child.type() == self.Type.ENUM or child.type() == self.Type.MESSAGE
-        )
+        return child.type() in [self.Type.ENUM, self.Type.MESSAGE]
 
     def dependencies(self) -> List['ProtoMessage']:
         if self._dependencies is None:
@@ -505,7 +501,7 @@ class ProtoMessageField:
         return self._field_name
 
     def enum_name(self) -> str:
-        return 'k' + self.name()
+        return f'k{self.name()}'
 
     def legacy_enum_name(self) -> str:
         return self.upper_snake_case(
@@ -553,7 +549,7 @@ class ProtoServiceMethod:
 
         def cc_enum(self) -> str:
             """Returns the pw_rpc MethodType C++ enum for this method type."""
-            return '::pw::rpc::MethodType::' + self.value
+            return f'::pw::rpc::MethodType::{self.value}'
 
     def __init__(
         self,

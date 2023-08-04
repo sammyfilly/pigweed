@@ -92,10 +92,7 @@ _VSIX_DIR = Path(env.PW_ROOT) / 'pw_ide' / 'vscode'
 
 def _vsc_os(system: str = platform.system()):
     """Return the OS tag that VSC expects."""
-    if system == 'Darwin':
-        return 'osx'
-
-    return system.lower()
+    return 'osx' if system == 'Darwin' else system.lower()
 
 
 def _activated_env() -> OrderedDict[str, Any]:
@@ -114,7 +111,7 @@ def _activated_env() -> OrderedDict[str, Any]:
             .env_mod
         )
     except (FileNotFoundError, json.JSONDecodeError):
-        activated_env = dict()
+        activated_env = {}
 
     return OrderedDict(activated_env)
 

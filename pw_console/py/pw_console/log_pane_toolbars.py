@@ -38,10 +38,7 @@ class LineInfoBar(ConditionalContainer):
 
     def get_tokens(self):
         """Return formatted text tokens for display."""
-        tokens = ' {} / {} '.format(
-            self.log_pane.log_view.get_current_line() + 1,
-            self.log_pane.log_view.get_total_count(),
-        )
+        tokens = f' {self.log_pane.log_view.get_current_line() + 1} / {self.log_pane.log_view.get_total_count()} '
         return [('', tokens)]
 
     def __init__(self, log_pane: 'LogPane'):

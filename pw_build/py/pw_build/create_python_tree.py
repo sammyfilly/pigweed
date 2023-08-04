@@ -147,9 +147,7 @@ def get_current_git_sha(repo_root: Optional[Path] = None) -> str:
         error_output = f'\n"{git_command}" failed with:' f'\n{gitsha}'
         if process.stderr:
             error_output += f'\n{process.stderr.decode()}'
-        raise UnknownGitSha(
-            'Could not determine the current git SHA.' + error_output
-        )
+        raise UnknownGitSha(f'Could not determine the current git SHA.{error_output}')
     return gitsha.strip()
 
 
@@ -307,12 +305,10 @@ def write_config(
     """Write a the final setup.cfg file with license comment block."""
     comment_block_text = ''
     if common_config:
-        # Get the license comment block from the common_config.
-        comment_block_match = re.search(
+        if comment_block_match := re.search(
             r'((^#.*?[\r\n])*)([^#])', common_config.read_text(), re.MULTILINE
-        )
-        if comment_block_match:
-            comment_block_text = comment_block_match.group(1)
+        ):
+            comment_block_text = comment_block_match[1]
 
     setup_cfg_file = tree_destination_dir.resolve() / 'setup.cfg'
     setup_cfg_text = io.StringIO()

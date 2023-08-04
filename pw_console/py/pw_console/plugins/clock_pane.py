@@ -272,22 +272,13 @@ class ClockPane(WindowPane, PluginMixin):
 
     def _get_example_text(self):
         """Examples of how to create formatted text."""
-        # pylint: disable=no-self-use
-        # Make a list to hold all the formatted text to display.
-        fragments = []
-
         # Some spacing vars
         wide_space = ('', '       ')
         space = ('', ' ')
         newline = ('', '\n')
 
-        # HTML() is a shorthand way to style text. See:
-        # https://python-prompt-toolkit.readthedocs.io/en/latest/pages/printing_text.html#html
-        # This formats 'Foreground Colors' as underlined:
-        fragments.append(HTML('<u>Foreground Colors</u>\n'))
-
-        # Standard ANSI colors examples
-        fragments.append(
+        fragments = [
+            HTML('<u>Foreground Colors</u>\n'),
             FormattedText(
                 [
                     # These tuples follow this format:
@@ -326,11 +317,8 @@ class ClockPane(WindowPane, PluginMixin):
                     ('ansiwhite', 'ansiwhite'),
                     space,
                 ]
-            )
-        )
-
-        fragments.append(HTML('\n<u>Background Colors</u>\n'))
-        fragments.append(
+            ),
+            HTML('\n<u>Background Colors</u>\n'),
             FormattedText(
                 [
                     # Here's an example of a style that specifies both
@@ -371,15 +359,8 @@ class ClockPane(WindowPane, PluginMixin):
                     ('bg:ansiwhite', 'ansiwhite'),
                     space,
                 ]
-            )
-        )
-
-        # pylint: disable=line-too-long
-        # These themes use Pigweed Console style classes. See full list in:
-        # https://cs.pigweed.dev/pigweed/+/main:pw_console/py/pw_console/style.py;l=189
-        # pylint: enable=line-too-long
-        fragments.append(HTML('\n\n<u>Current Theme Foreground Colors</u>\n'))
-        fragments.append(
+            ),
+            HTML('\n\n<u>Current Theme Foreground Colors</u>\n'),
             [
                 ('class:theme-fg-red', 'class:theme-fg-red'),
                 newline,
@@ -397,11 +378,8 @@ class ClockPane(WindowPane, PluginMixin):
                 newline,
                 ('class:theme-fg-magenta', 'class:theme-fg-magenta'),
                 newline,
-            ]
-        )
-
-        fragments.append(HTML('\n<u>Current Theme Background Colors</u>\n'))
-        fragments.append(
+            ],
+            HTML('\n<u>Current Theme Background Colors</u>\n'),
             [
                 ('class:theme-bg-red', 'class:theme-bg-red'),
                 newline,
@@ -419,11 +397,8 @@ class ClockPane(WindowPane, PluginMixin):
                 newline,
                 ('class:theme-bg-magenta', 'class:theme-bg-magenta'),
                 newline,
-            ]
-        )
-
-        fragments.append(HTML('\n<u>Theme UI Colors</u>\n'))
-        fragments.append(
+            ],
+            HTML('\n<u>Theme UI Colors</u>\n'),
             [
                 ('class:theme-fg-default', 'class:theme-fg-default'),
                 space,
@@ -458,8 +433,7 @@ class ClockPane(WindowPane, PluginMixin):
                     'class:theme-bg-button-inactive',
                 ),
                 space,
-            ]
-        )
-
+            ],
+        ]
         # Return all formatted text lists merged together.
         return merge_formatted_text(fragments)

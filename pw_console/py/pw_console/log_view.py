@@ -221,9 +221,7 @@ class LogView:
 
     @property
     def log_index(self):
-        if self.filtering_on:
-            return self._filtered_log_index
-        return self._log_index
+        return self._filtered_log_index if self.filtering_on else self._log_index
 
     @log_index.setter
     def log_index(self, new_log_index):
@@ -341,7 +339,7 @@ class LogView:
         interactive: bool = True,
     ) -> bool:
         """Start a new search for the given text."""
-        valid_matchers = list(s.name for s in SearchMatcher)
+        valid_matchers = [s.name for s in SearchMatcher]
         selected_matcher: Optional[SearchMatcher] = None
         if (
             search_matcher is not None
@@ -433,9 +431,7 @@ class LogView:
         self._reset_log_screen_on_next_render = True
 
     def _get_log_lines(self) -> Tuple[int, collections.deque[LogLine]]:
-        logs = self.log_store.logs
-        if self.filtering_on:
-            logs = self.filtered_logs
+        logs = self.filtered_logs if self.filtering_on else self.log_store.logs
         return self._scrollback_start_index, logs
 
     def _get_visible_log_lines(self):
@@ -447,10 +443,7 @@ class LogView:
         return logs
 
     def _get_table_formatter(self) -> Optional[Callable]:
-        table_formatter = None
-        if self.log_pane.table_view:
-            table_formatter = self.log_store.table.formatted_row
-        return table_formatter
+        return self.log_store.table.formatted_row if self.log_pane.table_view else None
 
     def delete_filter(self, filter_text):
         if filter_text not in self.filters:
@@ -560,9 +553,7 @@ class LogView:
 
     def wrap_lines_enabled(self):
         """Get the parent log pane wrap lines setting."""
-        if not self.log_pane:
-            return False
-        return self.log_pane.wrap_lines
+        return False if not self.log_pane else self.log_pane.wrap_lines
 
     def toggle_follow(self):
         """Toggle auto line following."""
@@ -580,9 +571,7 @@ class LogView:
             else:
                 break
 
-        if filter_match_count == len(self.filters):
-            return True
-        return False
+        return filter_match_count == len(self.filters)
 
     def new_logs_arrived(self):
         """Check newly arrived log messages.
@@ -786,16 +775,12 @@ class LogView:
 
     def scroll_up_one_page(self):
         """Move the selected log index up by one window height."""
-        lines = 1
-        if self._window_height > 0:
-            lines = self._window_height
+        lines = self._window_height if self._window_height > 0 else 1
         self.scroll(-1 * lines)
 
     def scroll_down_one_page(self):
         """Move the selected log index down by one window height."""
-        lines = 1
-        if self._window_height > 0:
-            lines = self._window_height
+        lines = self._window_height if self._window_height > 0 else 1
         self.scroll(lines)
 
     def scroll_down(self, lines=1):

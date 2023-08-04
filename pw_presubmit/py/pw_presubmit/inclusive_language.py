@@ -60,7 +60,7 @@ def _process_inclusive_language(*words):
             all_words.append(entry)
         elif isinstance(entry, (list, tuple)):
             all_words.extend(entry)
-        all_words.extend(x for x in words)
+        all_words.extend(iter(words))
     all_words = tuple(all_words)
 
     # Confirm each individual word compiles as a valid regex.
@@ -122,8 +122,7 @@ def presubmit_check(
     ctx.paths = presubmit_context.apply_exclusions(ctx)
 
     for path in ctx.paths:
-        match = words_regex.search(str(path.relative_to(ctx.root)))
-        if match:
+        if match := words_regex.search(str(path.relative_to(ctx.root))):
             found_words.setdefault(path, [])
             found_words[path].append(PathMatch(match.group(0)))
 
@@ -145,9 +144,7 @@ def presubmit_check(
                     ignored = _IGNORE in prev or _IGNORE in line
 
                     if enabled and not ignored:
-                        match = words_regex.search(line)
-
-                        if match:
+                        if match := words_regex.search(line):
                             found_words.setdefault(path, [])
                             found_words[path].append(
                                 LineMatch(i, match.group(0))

@@ -176,13 +176,9 @@ class CalcPane(WindowPane):
         # Evaluate the user's calculator expression as Python and format the
         # output result.
         try:
-            output = "\n\nIn:  {}\nOut: {}".format(
-                self.input_field.text,
-                # NOTE: Don't use 'eval' in real code (this is just an example)
-                eval(self.input_field.text),  # pylint: disable=eval-used
-            )
+            output = f"\n\nIn:  {self.input_field.text}\nOut: {eval(self.input_field.text)}"
         except BaseException as exception:  # pylint: disable=broad-except
-            output = "\n\n{}".format(exception)
+            output = f"\n\n{exception}"
 
         # Append the new output result to the existing output_field contents.
         new_text = self.output_field.text + output

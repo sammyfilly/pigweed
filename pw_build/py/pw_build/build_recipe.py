@@ -86,16 +86,11 @@ class BuildCommand:
     run_if: Callable[[Path], bool] = lambda _build_dir: True
 
     def __post_init__(self) -> None:
-        # Copy self._expanded_args from the command list.
-        self._expanded_args: List[str] = []
-        if self.command:
-            self._expanded_args = self.command
+        self._expanded_args = self.command if self.command else []
 
     def should_run(self) -> bool:
         """Return True if this build command should be run."""
-        if self.build_dir:
-            return self.run_if(self.build_dir)
-        return True
+        return self.run_if(self.build_dir) if self.build_dir else True
 
     def _get_starting_build_system_args(self) -> List[str]:
         """Return flags that appear immediately after the build command."""
@@ -197,14 +192,12 @@ class BuildCommand:
 
         build_system_target_args = self._get_build_system_args()
 
-        # Construct the build system command args.
-        command = [
+        return [
             self.build_system_command,
             *self._get_starting_build_system_args(),
             *extra_args,
             *build_system_target_args,
         ]
-        return command
 
     def __str__(self) -> str:
         return ' '.join(shlex.quote(arg) for arg in self.get_args())
@@ -227,9 +220,7 @@ class BuildRecipeStatus:
         return self.return_code is None
 
     def failed(self) -> bool:
-        if self.return_code is not None:
-            return self.return_code != 0
-        return False
+        return self.return_code != 0 if self.return_code is not None else False
 
     def append_failure_line(self, line: str) -> None:
         lines = self.error_lines.get(self.error_count, [])
@@ -485,9 +476,7 @@ class BuildRecipe:
 
     @property
     def log(self) -> logging.Logger:
-        if self._logger:
-            return self._logger
-        return logging.getLogger()
+        return self._logger if self._logger else logging.getLogger()
 
     @property
     def logfile(self) -> Optional[Path]:
@@ -495,19 +484,14 @@ class BuildRecipe:
 
     @property
     def display_name(self) -> str:
-        if self.title:
-            return self.title
-        return str(self.build_dir)
+        return self.title if self.title else str(self.build_dir)
 
     def targets(self) -> List[str]:
-        return list(
-            set(target for step in self.steps for target in step.targets)
-        )
+        return list({target for step in self.steps for target in step.targets})
 
     def __str__(self) -> str:
         message = self.display_name
-        targets = self.targets()
-        if targets:
+        if targets := self.targets():
             target_list = ' '.join(self.targets())
             message = f'{message} -- {target_list}'
         return message
@@ -518,33 +502,30 @@ def create_build_recipes(prefs: 'ProjectBuilderPrefs') -> List[BuildRecipe]:
     build_recipes: List[BuildRecipe] = []
 
     if prefs.run_commands:
-        for command_str in prefs.run_commands:
-            build_recipes.append(
-                BuildRecipe(
-                    build_dir=Path.cwd(),
-                    steps=[BuildCommand(command=shlex.split(command_str))],
-                    title=command_str,
-                )
+        build_recipes.extend(
+            BuildRecipe(
+                build_dir=Path.cwd(),
+                steps=[BuildCommand(command=shlex.split(command_str))],
+                title=command_str,
             )
-
+            for command_str in prefs.run_commands
+        )
     for build_dir, targets in prefs.build_directories.items():
         steps: List[BuildCommand] = []
         build_path = Path(build_dir)
         if not targets:
             targets = []
 
-        for (
-            build_system_command,
-            build_system_extra_args,
-        ) in prefs.build_system_commands(build_dir):
-            steps.append(
-                BuildCommand(
-                    build_system_command=build_system_command,
-                    build_system_extra_args=build_system_extra_args,
-                    targets=targets,
-                )
+        steps.extend(
+            BuildCommand(
+                build_system_command=build_system_command,
+                build_system_extra_args=build_system_extra_args,
+                targets=targets,
             )
-
+            for build_system_command, build_system_extra_args in prefs.build_system_commands(
+                build_dir
+            )
+        )
         build_recipes.append(
             BuildRecipe(
                 build_dir=build_path,

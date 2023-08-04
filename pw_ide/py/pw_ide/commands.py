@@ -400,7 +400,7 @@ def _process_compdbs(  # pylint: disable=too-many-locals
             all_processed_compdbs[compdb_file_path] = processed_compdbs
             processed_compdb_files.append(compdb_file_path)
 
-    if len(all_processed_compdbs) > 0:
+    if all_processed_compdbs:
         # Merge into one map of target names to compilation database.
         merged_compdbs = CppCompilationDatabasesMap.merge(
             *all_processed_compdbs.values()
@@ -446,7 +446,6 @@ def _process_compdbs(  # pylint: disable=too-many-locals
     ):
         state.current_target = None
 
-    num_total_targets = len(targets)
     num_new_targets = num_new_processed_targets + num_new_unprocessed_targets
 
     # Report the results.
@@ -465,13 +464,13 @@ def _process_compdbs(  # pylint: disable=too-many-locals
 
         reporter_lines = []
 
-        if len(unprocessed_compdb_files) > 0:
+        if unprocessed_compdb_files:
             reporter_lines.append(
                 f'Linked {len(unprocessed_compdb_files)} '
                 'unmodified compilation databases'
             )
 
-        if len(processed_compdb_files) > 0:
+        if processed_compdb_files:
             working_dir_path = pw_ide_settings.working_dir.relative_to(
                 Path(env.PW_PROJECT_ROOT)
             )
@@ -480,7 +479,8 @@ def _process_compdbs(  # pylint: disable=too-many-locals
                 f'{working_dir_path}'
             )
 
-        if len(reporter_lines) > 0:
+        if reporter_lines:
+            num_total_targets = len(targets)
             reporter_lines.extend(
                 [
                     f'{num_total_targets} targets are now available '
@@ -705,9 +705,10 @@ def cmd_cpp(  # pylint: disable=too-many-arguments, too-many-locals, too-many-br
             'C/C++ target toolchains available for language server analysis:'
         ]
 
-        for target in sorted(CppIdeFeaturesState(pw_ide_settings).targets):
-            targets_list_status.append(f'\t{target}')
-
+        targets_list_status.extend(
+            f'\t{target}'
+            for target in sorted(CppIdeFeaturesState(pw_ide_settings).targets)
+        )
         reporter.info(targets_list_status)
 
     if should_get_target or default:

@@ -52,8 +52,7 @@ def load_defaults_from_argparse(
     default_namespace, _unknown_args = parser.parse_known_args(
         [],  # Pass in blank arguments to avoid catching args from sys.argv.
     )
-    defaults_flags = vars(default_namespace)
-    return defaults_flags
+    return vars(default_namespace)
 
 
 class ProjectBuilderPrefs(YamlConfigLoaderMixin):
@@ -166,13 +165,10 @@ class ProjectBuilderPrefs(YamlConfigLoaderMixin):
         default_system_commands: Dict[str, Any] = config_dict.get('default', {})
         if default_system_commands is None:
             default_system_commands = {}
-        build_system_commands = config_dict.get(build_dir)
-
-        # In case 'out:' is in the config but has no contents.
-        if not build_system_commands:
+        if build_system_commands := config_dict.get(build_dir):
+            return build_system_commands
+        else:
             return default_system_commands
-
-        return build_system_commands
 
     def build_system_commands(
         self, build_dir: str
@@ -183,8 +179,8 @@ class ProjectBuilderPrefs(YamlConfigLoaderMixin):
         commands: List[Dict[str, Any]] = build_system_commands.get(
             'commands', []
         )
-        for command_step in commands:
-            command_steps.append(
-                (command_step['command'], command_step['extra_args'])
-            )
+        command_steps.extend(
+            (command_step['command'], command_step['extra_args'])
+            for command_step in commands
+        )
         return command_steps

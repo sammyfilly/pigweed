@@ -137,9 +137,9 @@ def get_default_colordepth(
         if sys.platform == 'darwin' and 'Apple_Terminal' in term_program:
             color_depth = ColorDepth.DEPTH_8_BIT
 
-    # Check for any PROMPT_TOOLKIT_COLOR_DEPTH environment variables
-    color_depth_override = os.environ.get('PROMPT_TOOLKIT_COLOR_DEPTH', '')
-    if color_depth_override:
+    if color_depth_override := os.environ.get(
+        'PROMPT_TOOLKIT_COLOR_DEPTH', ''
+    ):
         color_depth = ColorDepth(color_depth_override)
     return color_depth
 
@@ -253,9 +253,7 @@ class ConsoleApp:
         # Downstream project specific help text
         self.app_help_text = help_text if help_text else None
         self.app_help_window = HelpWindow(
-            self,
-            additional_help_text=help_text,
-            title=(self.app_title + ' Help'),
+            self, additional_help_text=help_text, title=f'{self.app_title} Help'
         )
         self.app_help_window.generate_keybind_help_text()
 
@@ -494,20 +492,18 @@ class ConsoleApp:
         )
 
     def set_ui_theme(self, theme_name: str) -> Callable:
-        call_function = functools.partial(
+        return functools.partial(
             self.run_pane_menu_option,
             functools.partial(self.load_theme, theme_name),
         )
-        return call_function
 
     def set_code_theme(self, theme_name: str) -> Callable:
-        call_function = functools.partial(
+        return functools.partial(
             self.run_pane_menu_option,
             functools.partial(
                 self.pw_ptpython_repl.use_code_colorscheme, theme_name
             ),
         )
-        return call_function
 
     def set_system_clipboard_data(self, data: ClipboardData) -> str:
         return self.set_system_clipboard(data.text)
@@ -555,11 +551,7 @@ class ConsoleApp:
             copy_methods.append('tmux')
             copied = True
 
-        message = ''
-        if copied:
-            message = 'Copied to: '
-            message += ', '.join(copy_methods)
-        return message
+        return 'Copied to: ' + ', '.join(copy_methods) if copied else ''
 
     def update_menu_items(self):
         self.menu_items = self._create_menu_items()
@@ -590,15 +582,15 @@ class ConsoleApp:
 
         all_logger_names = sorted([logger.name for logger in all_loggers()])
 
-        for logger_name in all_logger_names:
-            completions.append(
-                CommandRunnerItem(
-                    title=logger_name,
-                    handler=functools.partial(
-                        self.open_new_log_pane_for_logger, logger_name
-                    ),
-                )
+        completions.extend(
+            CommandRunnerItem(
+                title=logger_name,
+                handler=functools.partial(
+                    self.open_new_log_pane_for_logger, logger_name
+                ),
             )
+            for logger_name in all_logger_names
+        )
         return completions
 
     def open_command_runner_history(self) -> None:
@@ -640,7 +632,7 @@ class ConsoleApp:
 
         html_package_path = f'{_PW_CONSOLE_MODULE}.html'
         self.html_files = {
-            '/{}'.format(t): importlib.resources.read_text(html_package_path, t)
+            f'/{t}': importlib.resources.read_text(html_package_path, t)
             for t in importlib.resources.contents(html_package_path)
             if Path(t).suffix in ['.css', '.html', '.js']
         }
@@ -930,9 +922,8 @@ class ConsoleApp:
 
         window_menu_items = self.window_manager.create_window_menu_items()
 
-        floating_window_items = []
         if self.floating_window_plugins:
-            floating_window_items.append(MenuItem('-', None))
+            floating_window_items = [MenuItem('-', None)]
             floating_window_items.extend(
                 MenuItem(
                     'Floating Window {index}: {title}'.format(
@@ -1081,13 +1072,14 @@ class ConsoleApp:
     ) -> Optional[LogPane]:
         """Add the Log pane as a handler for this logger instance."""
 
-        existing_log_pane = None
-        # Find an existing LogPane with the same window_title.
-        for pane in self.window_manager.active_panes():
-            if isinstance(pane, LogPane) and pane.pane_title() == window_title:
-                existing_log_pane = pane
-                break
-
+        existing_log_pane = next(
+            (
+                pane
+                for pane in self.window_manager.active_panes()
+                if isinstance(pane, LogPane) and pane.pane_title() == window_title
+            ),
+            None,
+        )
         log_store: Optional[LogStore] = None
         if isinstance(logger_instances, LogStore):
             log_store = logger_instances
@@ -1218,7 +1210,7 @@ class ConsoleApp:
             self.application.invalidate()
 
     def setup_command_runner_log_pane(self) -> None:
-        if not self.system_command_output_pane is None:
+        if self.system_command_output_pane is not None:
             return
 
         self.system_command_output_pane = LogPane(

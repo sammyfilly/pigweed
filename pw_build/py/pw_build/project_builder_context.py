@@ -92,11 +92,10 @@ class BuildStatus(Formatter):
             if cfg.display_name != progress.label:
                 continue
 
-            build_status: StyleAndTextTuples = []
-            build_status.append(
-                cfg.status.status_slug(restarting=self.ctx.restart_flag)
-            )
-            build_status.append(('', ' '))
+            build_status: StyleAndTextTuples = [
+                cfg.status.status_slug(restarting=self.ctx.restart_flag),
+                ('', ' '),
+            ]
             build_status.extend(cfg.status.current_step_formatted())
 
             return build_status
@@ -189,9 +188,7 @@ class ProjectBuilderContext:  # pylint: disable=too-many-instance-attributes,too
 
     @property
     def log_build_steps(self) -> bool:
-        if self.project_builder:
-            return self.project_builder.log_build_steps
-        return False
+        return self.project_builder.log_build_steps if self.project_builder else False
 
     def interrupted(self) -> bool:
         return self.ctrl_c_pressed or self.restart_flag
@@ -272,10 +269,7 @@ class ProjectBuilderContext:  # pylint: disable=too-many-instance-attributes,too
 
     def exit_code(self) -> int:
         """Returns a 0 for success, 1 for fail."""
-        for cfg in self.recipes:
-            if cfg.status.failed():
-                return 1
-        return 0
+        return next((1 for cfg in self.recipes if cfg.status.failed()), 0)
 
     def get_title_bar_text(
         self, include_separators: bool = True

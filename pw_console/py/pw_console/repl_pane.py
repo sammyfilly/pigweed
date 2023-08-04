@@ -231,8 +231,7 @@ class ReplPane(WindowPane):
         self.application.focus_on_container(self.pw_ptpython_repl)
 
     def get_progress_bar_task_container(self):
-        bar_container = self.progress_state.get_container()
-        if bar_container:
+        if bar_container := self.progress_state.get_container():
             return bar_container
         return Window()
 
@@ -417,8 +416,7 @@ class ReplPane(WindowPane):
         self.clear_input_buffer()
 
     def interrupt_last_code_execution(self):
-        code = self._get_currently_running_code()
-        if code:
+        if code := self._get_currently_running_code():
             code.future.cancel()
             code.output = 'Canceled'
             self.progress_state.cancel_all_tasks()
@@ -426,16 +424,14 @@ class ReplPane(WindowPane):
         self.update_output_buffer('repl_pane.interrupt_last_code_execution')
 
     def _get_currently_running_code(self):
-        for code in self.executed_code:
-            if not code.future.done():
-                return code
-        return None
+        return next(
+            (code for code in self.executed_code if not code.future.done()), None
+        )
 
     def _get_executed_code(self, future):
-        for code in self.executed_code:
-            if code.future == future:
-                return code
-        return None
+        return next(
+            (code for code in self.executed_code if code.future == future), None
+        )
 
     def _log_executed_code(self, code, prefix=''):
         """Log repl command input text along with a prefix string."""
@@ -533,12 +529,12 @@ class ReplPane(WindowPane):
     def input_or_output_has_focus(self) -> Condition:
         @Condition
         def test() -> bool:
-            if (
-                has_focus(self.output_field)()
-                or has_focus(self.pw_ptpython_repl)()
-            ):
-                return True
-            return False
+            return bool(
+                (
+                    has_focus(self.output_field)()
+                    or has_focus(self.pw_ptpython_repl)()
+                )
+            )
 
         return test
 

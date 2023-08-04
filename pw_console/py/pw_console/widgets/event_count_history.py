@@ -88,9 +88,7 @@ class EventCountHistory:
         )
 
     def __repr__(self) -> str:
-        sparkline = ''
-        if self.show_sparkline:
-            sparkline = self.sparkline()
+        sparkline = self.sparkline() if self.show_sparkline else ''
         return ' '.join([sparkline, self.last_count_with_units()])
 
     def __pt_formatted_text__(self):

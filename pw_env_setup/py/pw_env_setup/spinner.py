@@ -33,11 +33,7 @@ class Spinner(object):  # pylint: disable=useless-object-inheritance
             return True
         if os.environ.get('PW_ENVSETUP_QUIET'):
             return True
-        if self._quiet:
-            return True
-        if not sys.stdout.isatty():
-            return True
-        return False
+        return True if self._quiet else not sys.stdout.isatty()
 
     def __del__(self):
         self._done = True
@@ -46,7 +42,7 @@ class Spinner(object):  # pylint: disable=useless-object-inheritance
         i = 0
         chars = '|/-\\'
         while not self._done:
-            sys.stdout.write('[{}]'.format(chars[i]))
+            sys.stdout.write(f'[{chars[i]}]')
             sys.stdout.flush()
             time.sleep(0.1)
             sys.stdout.write('\b\b\b')

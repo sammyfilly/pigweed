@@ -68,9 +68,9 @@ def plural(
     num = f'{count:{count_format}} ' if number else ''
 
     suffix = ''
-    if are and exist:
-        raise ValueError(f'cannot combine are ({are}) and exist ({exist})')
     if are:
+        if exist:
+            raise ValueError(f'cannot combine are ({are}) and exist ({exist})')
         suffix = ' is' if count == 1 else ' are'
     if exist:
         suffix = ' exists' if count == 1 else ' exist'
@@ -156,8 +156,9 @@ def file_summary(
 
         if files:
             extensions = files.most_common(max_types)
-            other_extensions = total - sum(count for _, count in extensions)
-            if other_extensions:
+            if other_extensions := total - sum(
+                count for _, count in extensions
+            ):
                 extensions.append(('other', other_extensions))
 
             types = ' (' + ', '.join(f'{c} {e}' for e, c in extensions) + ')'
@@ -194,7 +195,7 @@ def exclude_paths(
 
 def _truncate(value, length: int = 60) -> str:
     value = str(value)
-    return (value[: length - 5] + '[...]') if len(value) > length else value
+    return f'{value[:length - 5]}[...]' if len(value) > length else value
 
 
 def format_command(args: Sequence, kwargs: dict) -> Tuple[str, str]:
@@ -210,8 +211,7 @@ def log_run(
     Takes the same arguments as subprocess.run. The command is only executed if
     dry-run is not enabled.
     """
-    ctx = PRESUBMIT_CONTEXT.get()
-    if ctx:
+    if ctx := PRESUBMIT_CONTEXT.get():
         if not ignore_dry_run:
             ctx.append_check_command(*args, **kwargs)
         if ctx.dry_run and not ignore_dry_run:

@@ -115,13 +115,13 @@ def _bazel_command_args_to_build_commands(
     """Returns a list of BuildCommands based on a bazel PresubmitCheckTrace."""
     build_steps: List[BuildCommand] = []
 
-    if not 'bazel' in trace.args:
+    if 'bazel' not in trace.args:
         return build_steps
 
-    bazel_command = list(arg for arg in trace.args if not arg.startswith('--'))
-    bazel_options = list(
+    bazel_command = [arg for arg in trace.args if not arg.startswith('--')]
+    bazel_options = [
         arg for arg in trace.args if arg.startswith('--') and arg != '--'
-    )
+    ]
     # Check for `bazel build` or `bazel test`
     if not (
         bazel_command[0].endswith('bazel')
@@ -141,7 +141,7 @@ def _bazel_command_args_to_build_commands(
                 targets=bazel_targets,
             )
         )
-    if bazel_subcommand == 'test':
+    elif bazel_subcommand == 'test':
         build_steps.append(
             BuildCommand(
                 build_system_command='bazel',
@@ -359,9 +359,7 @@ def _get_parser(
         def build_recipe_argparse_type(arg: str) -> List[BuildRecipe]:
             """Return a list of matching presubmit steps."""
             assert build_recipes
-            all_recipe_names = list(
-                recipe.display_name for recipe in build_recipes
-            )
+            all_recipe_names = [recipe.display_name for recipe in build_recipes]
             filtered_names = fnmatch.filter(all_recipe_names, arg)
 
             if not filtered_names:
@@ -371,11 +369,11 @@ def _get_parser(
                     f'Valid Recipes:\n{recipe_name_str}'
                 )
 
-            return list(
+            return [
                 recipe
                 for recipe in build_recipes
                 if recipe.display_name in filtered_names
-            )
+            ]
 
         parser.add_argument(
             '-r',
@@ -404,7 +402,7 @@ def _get_parser(
                     f'Valid Steps:\n{all_step_names}'
                 )
 
-            return list(all_steps[name] for name in filtered_step_names)
+            return [all_steps[name] for name in filtered_step_names]
 
         parser.add_argument(
             '-s',
@@ -511,12 +509,11 @@ def _get_prefs(
     prefs: Union[ProjectBuilderPrefs, WatchAppPrefs]
     if PW_WATCH_AVAILABLE:
         prefs = WatchAppPrefs(load_argparse_arguments=add_watch_arguments)
-        prefs.apply_command_line_args(args)
     else:
         prefs = ProjectBuilderPrefs(
             load_argparse_arguments=add_project_builder_arguments
         )
-        prefs.apply_command_line_args(args)
+    prefs.apply_command_line_args(args)
     return prefs
 
 
@@ -533,26 +530,25 @@ def load_presubmit_build_recipes(
     """Convert selected presubmit steps into a list of BuildRecipes."""
     # Use the default presubmit if no other steps or command line out
     # directories are provided.
-    if len(presubmit_steps) == 0 and default_presubmit_step_names:
-        default_steps = list(
+    if not presubmit_steps and default_presubmit_step_names:
+        default_steps = [
             check
             for name, check in presubmit_programs.all_steps().items()
             if name in default_presubmit_step_names
-        )
+        ]
         presubmit_steps = default_steps
 
     presubmit_recipes: List[BuildRecipe] = []
 
     for step in presubmit_steps:
-        build_recipe = presubmit_build_recipe(
+        if build_recipe := presubmit_build_recipe(
             repo_root,
             presubmit_out_dir,
             package_root,
             step,
             all_files,
             modified_files,
-        )
-        if build_recipe:
+        ):
             presubmit_recipes.append(build_recipe)
 
     return presubmit_recipes
@@ -679,11 +675,7 @@ def main(
     )
 
     pw_env = pw_cli.env.pigweed_environment()
-    if pw_env.PW_EMOJI:
-        charset = EMOJI_CHARSET
-    else:
-        charset = ASCII_CHARSET
-
+    charset = EMOJI_CHARSET if pw_env.PW_EMOJI else ASCII_CHARSET
     if build_recipes and args.tab_complete_recipe is not None:
         _tab_complete_recipe(build_recipes, text=args.tab_complete_recipe)
         return 0
@@ -782,9 +774,6 @@ def main(
 
     workers = 1
     if args.parallel:
-        # If parallel is requested and parallel_workers is set to 0 run all
-        # recipes in parallel. That is, use the number of recipes as the worker
-        # count.
         if args.parallel_workers == 0:
             workers = len(recipes_to_build)
         else:

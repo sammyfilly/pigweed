@@ -52,15 +52,11 @@ def _stdin_args_for_hook(hook) -> Sequence[str]:
         )
     if hook in ('pre-receive', 'post-receive', 'reference-transaction'):
         return ('old_value', 'new_value', 'ref_name')
-    if hook == 'post-rewrite':
-        return ('old_object_name', 'new_object_name')
-    return ()
+    return ('old_object_name', 'new_object_name') if hook == 'post-rewrite' else ()
 
 
 def _replace_arg_in_hook(arg: str, unquoted_args: Sequence[str]) -> str:
-    if arg in unquoted_args:
-        return arg
-    return shlex.quote(arg)
+    return arg if arg in unquoted_args else shlex.quote(arg)
 
 
 def install_git_hook(
@@ -85,12 +81,11 @@ def install_git_hook(
 
     if root.joinpath('.git').is_dir():
         hook_path = root.joinpath('.git', 'hooks', hook)
-    else:  # This repo is probably a submodule with a .git file instead
-        match = re.match('^gitdir: (.*)$', root.joinpath('.git').read_text())
-        if not match:
-            raise ValueError('Unexpected format for .git file')
+    elif match := re.match('^gitdir: (.*)$', root.joinpath('.git').read_text()):
+        hook_path = root.joinpath(match[1], 'hooks', hook).resolve()
 
-        hook_path = root.joinpath(match.group(1), 'hooks', hook).resolve()
+    else:
+        raise ValueError('Unexpected format for .git file')
 
     hook_path.parent.mkdir(exist_ok=True)
 

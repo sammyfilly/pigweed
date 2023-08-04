@@ -88,9 +88,7 @@ def parse():
 
 def main():
     """Script entry point."""
-    if os.name != 'nt':
-        return 1
-    return print_banner(**vars(parse()))
+    return 1 if os.name != 'nt' else print_banner(**vars(parse()))
 
 
 if __name__ == '__main__':

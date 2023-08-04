@@ -70,7 +70,7 @@ class GNIVisitor(object):  # pylint: disable=useless-object-inheritance
 
         print('declare_args() {', file=outs)
         for name, value in sorted(self._gn_variables(env).items()):
-            print('  {} = "{}"'.format(name, value), file=outs)
+            print(f'  {name} = "{value}"', file=outs)
         print('}', file=outs)
 
     def _abspath_to_gn_path(self, path):
@@ -80,19 +80,19 @@ class GNIVisitor(object):  # pylint: disable=useless-object-inheritance
             # find-and-replace is a little crude, but python 2.7 doesn't support
             # pathlib.
             gn_path = gn_path.replace(ntpath.sep, posixpath.sep)
-        return '//{}'.format(gn_path)
+        return f'//{gn_path}'
 
     def visit_set(self, set):  # pylint: disable=redefined-builtin
         match = re.search(r'PW_(.*)_CIPD_INSTALL_DIR', set.name)
         name = None
 
         if match:
-            name = 'pw_env_setup_CIPD_{}'.format(match.group(1))
-        if set.name == 'VIRTUAL_ENV':
-            name = 'pw_env_setup_VIRTUAL_ENV'
+            name = f'pw_env_setup_CIPD_{match[1]}'
         if set.name == 'PW_PACKAGE_ROOT':
             name = 'pw_env_setup_PACKAGE_ROOT'
 
+        elif set.name == 'VIRTUAL_ENV':
+            name = 'pw_env_setup_VIRTUAL_ENV'
         if name:
             self._variables[name] = self._abspath_to_gn_path(set.value)
 

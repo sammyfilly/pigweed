@@ -399,7 +399,7 @@ def _expand_arguments(paths: GnPaths, string: str) -> _Actions:
 
 def expand_expressions(paths: GnPaths, arg: str) -> Iterable[str]:
     """Expands <FUNCTION(...)> expressions; yields zero or more arguments."""
-    if arg == '':
+    if not arg:
         return ['']
 
     expanded_args: List[List[str]] = [[]]

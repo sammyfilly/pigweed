@@ -25,10 +25,7 @@ def _no_color(msg: str) -> str:
 
 def _split_lines(msg: Union[str, List[str]]) -> Tuple[str, List[str]]:
     """Turn a list of strings into a tuple of the first and list of rest."""
-    if isinstance(msg, str):
-        return (msg, [])
-
-    return (msg[0], msg[1:])
+    return (msg, []) if isinstance(msg, str) else (msg[0], msg[1:])
 
 
 class StatusReporter:

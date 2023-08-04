@@ -46,20 +46,20 @@ formatter = logging.Formatter(
 
 def make_log(**kwargs):
     """Create a LogLine instance."""
-    # Construct a LogRecord
-    attributes = dict(
-        name='testlogger',
-        levelno=logging.INFO,
-        levelname='INF',
-        msg='[%s] %.3f %s',
-        args=('MOD1', 3.14159, 'Real message here'),
-        created=_TIMESTAMP_SAMPLE.timestamp(),
-        filename='test.py',
-        lineno=42,
-        pathname='/home/user/test.py',
+    attributes = (
+        dict(
+            name='testlogger',
+            levelno=logging.INFO,
+            levelname='INF',
+            msg='[%s] %.3f %s',
+            args=('MOD1', 3.14159, 'Real message here'),
+            created=_TIMESTAMP_SAMPLE.timestamp(),
+            filename='test.py',
+            lineno=42,
+            pathname='/home/user/test.py',
+        )
+        | kwargs
     )
-    # Override any above attrs that are passed in.
-    attributes.update(kwargs)
     # Create the record
     record = logging.makeLogRecord(dict(attributes))
     # Format

@@ -121,8 +121,7 @@ class YamlConfigLoaderMixin:
         # Check for a config file specified by an environment variable.
         if environment_var is None:
             return
-        environment_config = os.environ.get(environment_var, None)
-        if environment_config:
+        if environment_config := os.environ.get(environment_var, None):
             env_file_path = Path(environment_config)
             if not env_file_path.is_file():
                 raise FileNotFoundError(
@@ -159,8 +158,5 @@ class YamlConfigLoaderMixin:
                 self._update_config(cfg)
             else:
                 raise MissingConfigTitle(
-                    '\n\nThe config file "{}" is missing the expected '
-                    '"config_title: {}" setting.'.format(
-                        str(file_path), self._config_section_title
-                    )
+                    f'\n\nThe config file "{str(file_path)}" is missing the expected "config_title: {self._config_section_title}" setting.'
                 )

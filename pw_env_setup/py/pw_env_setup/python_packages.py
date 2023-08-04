@@ -26,7 +26,7 @@ import pkg_resources
 
 def _installed_packages() -> Iterator[str]:
     """Run pip python_packages and write to out."""
-    installed_packages = list(
+    installed_packages = [
         pkg.as_requirement()
         for pkg in pkg_resources.working_set  # pylint: disable=not-an-iterable
         # Non-editable packages only
@@ -37,14 +37,14 @@ def _installed_packages() -> Iterator[str]:
         # These are always installed by default in:
         #   pw_env_setup/py/pw_env_setup/virtualenv_setup/install.py
         and pkg.key not in ['pip', 'setuptools', 'wheel']
-    )
+    ]
     for req in sorted(
         installed_packages, key=lambda pkg: pkg.name.lower()  # type: ignore
     ):
         yield str(req)
 
 
-def ls(output_file: Optional[Path]) -> int:  # pylint: disable=invalid-name
+def ls(output_file: Optional[Path]) -> int:    # pylint: disable=invalid-name
     """Run pip python_packages and write to output_file."""
     actual_requirements = frozenset(
         pkg_resources.Requirement.parse(line) for line in _installed_packages()
@@ -55,9 +55,9 @@ def ls(output_file: Optional[Path]) -> int:  # pylint: disable=invalid-name
     # that are missing in the active environment.
     if output_file:
         existing_lines = output_file.read_text().splitlines()
-        expected_requirements = set(
+        expected_requirements = {
             pkg_resources.Requirement.parse(line) for line in existing_lines
-        )
+        }
         missing_requirements = expected_requirements - actual_requirements
 
     new_requirements: List[pkg_resources.Requirement] = list(
@@ -201,16 +201,16 @@ def diff(
         if requirement.specs != found_package.as_requirement().specs:
             updated_packages[found_package.as_requirement()] = line
 
-    ignored_distributions = list(
+    ignored_distributions = [
         distribution
         for distribution in pkg_resources.working_set  # pylint: disable=not-an-iterable
         if distribution.as_requirement() in ignored_requirements
-    )
-    expected_distributions = list(
+    ]
+    expected_distributions = [
         distribution
         for distribution in pkg_resources.working_set  # pylint: disable=not-an-iterable
         if distribution.as_requirement() in expected_requirements
-    )
+    ]
 
     def get_requirements(
         dist_info: pkg_resources.Distribution,
@@ -323,9 +323,7 @@ def main() -> int:
     cmd = args.pop('cmd')
     if cmd == 'diff':
         return diff(**args)
-    if cmd == 'list':
-        return ls(**args)
-    return -1
+    return ls(**args) if cmd == 'list' else -1
 
 
 if __name__ == '__main__':

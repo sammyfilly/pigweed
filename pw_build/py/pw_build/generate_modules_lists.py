@@ -88,14 +88,13 @@ _DO_NOT_SET = 'DO NOT SET THIS BUILD ARGUMENT!'
 
 
 def _module_list_warnings(root: Path, modules: Sequence[str]) -> Iterator[str]:
-    missing = _missing_modules(root, modules)
-    if missing:
+    if missing := _missing_modules(root, modules):
         yield _MISSING_MODULES_WARNING.format(
             modules=''.join(f'\n  - {module}' for module in missing)
         )
 
     if any(modules[i] > modules[i + 1] for i in range(len(modules) - 1)):
-        yield _WARNING + 'The PIGWEED_MODULES list is not sorted!'
+        yield f'{_WARNING}The PIGWEED_MODULES list is not sorted!'
         yield ''
         yield 'Apply the following diff to fix the order:'
         yield ''
@@ -240,7 +239,7 @@ def main(
 
         # Make a diff of required changes
         modules_gni_relpath = os.path.relpath(modules_gni_file, root)
-        diff = list(
+        if diff := list(
             difflib.unified_diff(
                 modules_gni_file.read_text().splitlines(),
                 process.stdout.decode('utf-8', errors='replace').splitlines(),
@@ -249,19 +248,17 @@ def main(
                 lineterm='',
                 n=1,
             )
-        )
-        # If any differences were found, print the error and the diff.
-        if diff:
-            errors.append(
-                _OUT_OF_DATE_WARNING.format(
-                    out_dir=os.path.relpath(os.curdir, root),
-                    file=os.path.relpath(modules_gni_file, root),
+        ):
+            errors.extend(
+                (
+                    _OUT_OF_DATE_WARNING.format(
+                        out_dir=os.path.relpath(os.curdir, root),
+                        file=os.path.relpath(modules_gni_file, root),
+                    ),
+                    'Expected Diff:\n',
                 )
             )
-            errors.append('Expected Diff:\n')
-            errors.append('\n'.join(diff))
-            errors.append('\n')
-
+            errors.extend(('\n'.join(diff), '\n'))
     elif mode is Mode.UPDATE:  # Update the modules .gni file
         with modules_gni_file.open('w', encoding='utf-8') as file:
             for line in _generate_modules_gni(prefix, modules):

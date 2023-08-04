@@ -143,10 +143,8 @@ def split_into_chunks(
 ) -> Generator[Tuple[Any, ...], None, None]:
     """Splits an iterable into chunks of a given size."""
     data_iterator = iter(data)
-    chunk = tuple(itertools.islice(data_iterator, chunk_size))
-    while chunk:
+    while chunk := tuple(itertools.islice(data_iterator, chunk_size)):
         yield chunk
-        chunk = tuple(itertools.islice(data_iterator, chunk_size))
 
 
 def header_from_blobs(

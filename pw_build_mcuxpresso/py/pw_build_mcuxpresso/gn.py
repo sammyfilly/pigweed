@@ -37,9 +37,9 @@ def _gn_list_path_out(
 ):
     """Outputs list of paths in GN format with common prefix."""
     if path_prefix is not None:
-        str_val = list(f'{path_prefix}/{str(d)}' for d in val)
+        str_val = [f'{path_prefix}/{str(d)}' for d in val]
     else:
-        str_val = list(str(d) for d in val)
+        str_val = [str(d) for d in val]
     _gn_list_str_out(name, str_val)
 
 

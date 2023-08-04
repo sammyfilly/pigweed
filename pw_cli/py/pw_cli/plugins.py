@@ -178,8 +178,7 @@ def callable_with_no_args(plugin: Plugin) -> None:
             f'{type(plugin.target).__name__}'
         )
 
-    positional = sum(p.default == p.empty for p in params.values())
-    if positional:
+    if positional := sum(p.default == p.empty for p in params.values()):
         raise Error(
             f'Plugin functions cannot have any required positional '
             f'arguments, but {plugin.target_name} has {positional}'
@@ -508,9 +507,9 @@ def import_submodules(
     """
     path = module.__path__  # type: ignore[attr-defined]
     if recursive:
-        modules = pkgutil.walk_packages(path, module.__name__ + '.')
+        modules = pkgutil.walk_packages(path, f'{module.__name__}.')
     else:
-        modules = pkgutil.iter_modules(path, module.__name__ + '.')
+        modules = pkgutil.iter_modules(path, f'{module.__name__}.')
 
     for info in modules:
         importlib.import_module(info.name)

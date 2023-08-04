@@ -21,9 +21,7 @@ import os
 
 
 def _resolve_env(env):
-    if env:
-        return env
-    return os.environ
+    return env if env else os.environ
 
 
 def _get_project_root(env):
@@ -42,7 +40,7 @@ def _pw_env_substitute(env, string):
         string = string.replace('$pw_env{' + key + '}', value)
 
     if '$pw_env{' in string:
-        raise ValueError(f'Unresolved $pw_env\\{...} in JSON string: {string}')
+        raise ValueError(f'Unresolved $pw_env\\Ellipsis in JSON string: {string}')
 
     return string
 

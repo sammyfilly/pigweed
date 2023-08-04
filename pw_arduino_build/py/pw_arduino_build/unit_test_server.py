@@ -83,9 +83,7 @@ def generate_runner(command: str, arguments: List[str]) -> str:
     # one set up.
     for i, arg in enumerate(arguments):
         arguments[i] = f'  args: "{arg}"'
-    runner = ['runner {', f'  command:"{command}"']
-    runner.extend(arguments)
-    runner.append('}\n')
+    runner = ['runner {', f'  command:"{command}"', *arguments, '}\n']
     return '\n'.join(runner)
 
 
@@ -174,7 +172,7 @@ def main():
         # Only raise an error if arduino_package_path not set from the json.
         if arduino_package_path is None:
             raise UnknownArduinoCore(
-                "Test runner arguments: '{}'".format(" ".join(args.runner_args))
+                f"""Test runner arguments: '{" ".join(args.runner_args)}'"""
             )
 
     exit_code = launch_server(

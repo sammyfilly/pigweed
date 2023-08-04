@@ -82,7 +82,7 @@ class _OutputFile:
         return ''.join(self._content)
 
     def write(self) -> None:
-        print('  create  ' + str(self._file.relative_to(Path.cwd())))
+        print(f'  create  {str(self._file.relative_to(Path.cwd()))}')
         self._file.write_text(self.content)
 
     class _IndentationContext:
@@ -134,10 +134,7 @@ class _ModuleName:
     @classmethod
     def parse(cls, name: str) -> Optional['_ModuleName']:
         match = re.fullmatch(_ModuleName._MODULE_NAME_REGEX, name)
-        if not match:
-            return None
-
-        return cls(match.group(1), match.group(2)[1:])
+        return None if not match else cls(match[1], match[2][1:])
 
 
 @dataclass
@@ -329,9 +326,7 @@ class _GnBuildFile(_BuildFile):
                 file,
                 'pw_test_group',
                 'tests',
-                {
-                    'tests': list(f':{test.name}' for test in self._cc_tests),
-                },
+                {'tests': [f':{test.name}' for test in self._cc_tests]},
             )
 
     def _write_cc_target(
@@ -863,7 +858,7 @@ def _create_module(
     )
 
     try:
-        generators = list(_LANGUAGE_GENERATORS[lang](ctx) for lang in languages)
+        generators = [_LANGUAGE_GENERATORS[lang](ctx) for lang in languages]
     except KeyError as key:
         _LOG.error('Unsupported language: %s', key)
         sys.exit(1)
@@ -893,7 +888,7 @@ def _create_module(
         modules_list.sort()
         modules_list.append('')
         modules_file.write_text('\n'.join(modules_list))
-        print('  modify  ' + str(modules_file.relative_to(Path.cwd())))
+        print(f'  modify  {str(modules_file.relative_to(Path.cwd()))}')
 
         generate_modules_lists.main(
             root=project_root,
@@ -901,7 +896,7 @@ def _create_module(
             modules_gni_file=modules_gni_file,
             mode=generate_modules_lists.Mode.UPDATE,
         )
-        print('  modify  ' + str(modules_gni_file.relative_to(Path.cwd())))
+        print(f'  modify  {str(modules_gni_file.relative_to(Path.cwd()))}')
 
     print()
     _LOG.info(

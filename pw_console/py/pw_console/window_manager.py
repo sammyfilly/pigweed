@@ -257,11 +257,9 @@ class WindowManager:
         ]
 
         if self.vertical_window_list_spliting():
-            new_heights = [
-                self.current_window_manager_height for h in new_heights
-            ]
+            new_heights = [self.current_window_manager_height for _ in new_heights]
         else:
-            new_widths = [self.current_window_manager_width for h in new_widths]
+            new_widths = [self.current_window_manager_width for _ in new_widths]
 
         self._set_window_list_sizes(new_heights, new_widths)
 
@@ -665,8 +663,7 @@ class WindowManager:
         if window_list_index == len(self.window_lists) - 1:
             next_window_list_index = window_list_index - 1
 
-        next_window_list = self.window_lists[next_window_list_index]
-        return next_window_list
+        return self.window_lists[next_window_list_index]
 
     def adjust_split_size(
         self, window_list: WindowList, diff: int = _WINDOW_SPLIT_ADJUST
@@ -786,12 +783,12 @@ class WindowManager:
 
     def mouse_handler(self, mouse_event: MouseEvent):
         """MouseHandler used when resize_mode == True."""
-        mouse_position = mouse_event.position
-
         if (
             mouse_event.event_type == MouseEventType.MOUSE_MOVE
             and mouse_event.button == MouseButton.LEFT
         ):
+            mouse_position = mouse_event.position
+
             self.mouse_resize(mouse_position.x, mouse_position.y)
         elif mouse_event.event_type == MouseEventType.MOUSE_UP:
             self.stop_resize()
@@ -1044,8 +1041,7 @@ class WindowManager:
         """Build the [Window] menu for the current set of window lists."""
         root_menu_items = []
         for window_list_index, window_list in enumerate(self.window_lists):
-            menu_items = []
-            menu_items.append(
+            menu_items = [
                 MenuItem(
                     'Column {index} View Modes'.format(
                         index=window_list_index + 1
@@ -1066,7 +1062,7 @@ class WindowManager:
                         for display_mode in DisplayMode
                     ],
                 )
-            )
+            ]
             menu_items.extend(
                 MenuItem(
                     '{index}: {title}'.format(

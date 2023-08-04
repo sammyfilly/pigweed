@@ -98,7 +98,7 @@ class SerialBandwidthTracker:
         self.pw_bps_history['read'].log(len(data))
         self.pw_bps_history['total'].log(len(data))
 
-        if len(data) > 0:
+        if data:
             prefix = 'Read %2d B: ' % len(data)
             _LOG.debug(
                 '%s%s',
@@ -187,7 +187,7 @@ class BandwidthToolbar(WindowPaneToolbar, PluginMixin):
                     ('', '  '),
                     (
                         'class:theme-bg-active class:theme-fg-active',
-                        ' {}: '.format(count_name.title()),
+                        f' {count_name.title()}: ',
                     ),
                     (
                         'class:theme-bg-active class:theme-fg-cyan',
@@ -195,14 +195,12 @@ class BandwidthToolbar(WindowPaneToolbar, PluginMixin):
                     ),
                     (
                         'class:theme-bg-active class:theme-fg-orange',
-                        '{} '.format(events.display_unit_title),
+                        f'{events.display_unit_title} ',
                     ),
                 ]
             )
             if count_name == 'total':
-                tokens.append(
-                    ('class:theme-fg-cyan', '{}'.format(events.sparkline()))
-                )
+                tokens.append(('class:theme-fg-cyan', f'{events.sparkline()}'))
 
         self.formatted_text = tokens
 

@@ -107,7 +107,7 @@ def main(
             req_file_str = str(req_file.resolve())
             if not req_file.exists():
                 raise FileNotFoundError(
-                    'Missing Python wheel requirement file: ' + req_file_str
+                    f'Missing Python wheel requirement file: {req_file_str}'
                 )
             # Install the wheel requirement file
             command_args.extend(['--requirement', req_file_str])
@@ -117,10 +117,10 @@ def main(
             )
             # Switch any constraint files to requirements. Hashes seem to be
             # ignored in constraint files.
-            command_args = list(
+            command_args = [
                 '--requirement' if arg == '--constraint' else arg
                 for arg in command_args
-            )
+            ]
 
         else:
             # Pass the target along to pip with no modifications.

@@ -264,9 +264,7 @@ class TestLogView(unittest.TestCase):
         self.assertEqual(log_view.get_current_line(), 3)
         self.assertEqual(log_view.get_total_count(), 4)
         self.assertEqual(
-            list(
-                log.record.message for log in log_view._get_visible_log_lines()
-            ),
+            [log.record.message for log in log_view._get_visible_log_lines()],
             ['Test log 0', 'Test log 1', 'Test log 2', 'Test log 3'],
         )
 
@@ -282,10 +280,7 @@ class TestLogView(unittest.TestCase):
         self.assertEqual(log_view.get_total_count(), 4)
         # No lines returned
         self.assertEqual(
-            list(
-                log.record.message for log in log_view._get_visible_log_lines()
-            ),
-            [],
+            [log.record.message for log in log_view._get_visible_log_lines()], []
         )
 
         # Add Log 4 more lines
@@ -303,9 +298,7 @@ class TestLogView(unittest.TestCase):
         self.assertEqual(log_view.get_total_count(), 8)
         # Only the last 4 logs should appear
         self.assertEqual(
-            list(
-                log.record.message for log in log_view._get_visible_log_lines()
-            ),
+            [log.record.message for log in log_view._get_visible_log_lines()],
             ['Test log 4', 'Test log 5', 'Test log 6', 'Test log 7'],
         )
 
@@ -321,9 +314,7 @@ class TestLogView(unittest.TestCase):
         self.assertEqual(log_view.get_total_count(), 8)
         # All logs should appear
         self.assertEqual(
-            list(
-                log.record.message for log in log_view._get_visible_log_lines()
-            ),
+            [log.record.message for log in log_view._get_visible_log_lines()],
             [
                 'Test log 0',
                 'Test log 1',
@@ -362,9 +353,7 @@ class TestLogView(unittest.TestCase):
         self.assertEqual(log_view.get_current_line(), 3)
         self.assertEqual(log_view.get_total_count(), 4)
         self.assertEqual(
-            list(
-                log.record.message for log in log_view._get_visible_log_lines()
-            ),
+            [log.record.message for log in log_view._get_visible_log_lines()],
             ['Test log 0', 'Test log 1', 'Test log 2', 'Test log 3'],
         )
 
@@ -477,32 +466,10 @@ if _PYTHON_3_8:
 
             return log_view, log_pane
 
-        @parameterized.expand(
-            [
-                (
-                    # Test name
-                    'regex filter',
-                    # Search input_text
-                    'log.*item',
-                    # input_logs
-                    [
-                        ('Log some item', dict()),
-                        ('Log another item', dict()),
-                        ('Some exception', dict()),
-                    ],
-                    # expected_matched_lines
-                    [
+        @parameterized.expand([('regex filter', 'log.*item', [('Log some item', {}), ('Log another item', {}), ('Some exception', {})], [
                         'Log some item',
                         'Log another item',
-                    ],
-                    # expected_match_line_numbers
-                    {0: 0, 1: 1},
-                    # expected_export_text
-                    ('  DEBUG  Log some item\n  DEBUG  Log another item\n'),
-                    None,  # field
-                    False,  # invert
-                ),
-                (
+                    ], {0: 0, 1: 1}, '  DEBUG  Log some item\n  DEBUG  Log another item\n', None, False), (
                     # Test name
                     'regex filter with field',
                     # Search input_text
@@ -536,8 +503,7 @@ if _PYTHON_3_8:
                     ),
                     'planet',  # field
                     False,  # invert
-                ),
-                (
+                ), (
                     # Test name
                     'regex filter with field inverted',
                     # Search input_text
@@ -567,9 +533,7 @@ if _PYTHON_3_8:
                     ('  DEBUG  Jupiter  Log some item\n'),
                     'planet',  # field
                     True,  # invert
-                ),
-            ]
-        )
+                )])
         async def test_log_filtering(
             self,
             _test_name,
@@ -612,10 +576,9 @@ if _PYTHON_3_8:
                     use_table_formatting=True
                 )
             )
-            # Remove leading time from resulting logs
-            log_text_no_datetime = ''
-            for line in log_text.splitlines():
-                log_text_no_datetime += line[17:] + '\n'
+            log_text_no_datetime = ''.join(
+                line[17:] + '\n' for line in log_text.splitlines()
+            )
             self.assertEqual(log_text_no_datetime, expected_export_text)
 
             # Select the bottom log line

@@ -424,10 +424,9 @@ class LogPaneWebsocketDialog(ConditionalContainer):
         self._last_action_message = text
 
     def copy_url_to_clipboard(self) -> None:
-        result_message = self.log_pane.application.set_system_clipboard(
+        if result_message := self.log_pane.application.set_system_clipboard(
             self.log_pane.log_view.get_web_socket_url()
-        )
-        if result_message:
+        ):
             self._set_action_message(result_message)
 
     def get_message_fragments(self):
@@ -453,7 +452,7 @@ class LogPaneWebsocketDialog(ConditionalContainer):
         # whitespace focuses the input field.
         separator_text = ('', '  ', focus)
 
-        fragments = [
+        return [
             ('class:saveas-dialog-setting', 'URL:  ', focus),
             (
                 'class:saveas-dialog-title',
@@ -462,7 +461,6 @@ class LogPaneWebsocketDialog(ConditionalContainer):
             ),
             separator_text,
         ]
-        return fragments
 
     def get_action_fragments(self):
         """Return FormattedText with the action buttons."""
@@ -674,9 +672,7 @@ class LogPane(WindowPane):
 
     @property
     def table_view(self):
-        if self.log_view.websocket_running:
-            return False
-        return self._table_view
+        return False if self.log_view.websocket_running else self._table_view
 
     @table_view.setter
     def table_view(self, table_view):
@@ -702,7 +698,7 @@ class LogPane(WindowPane):
         if not self._pane_subtitle:
             self._pane_subtitle = text
         else:
-            self._pane_subtitle = self._pane_subtitle + ', ' + text
+            self._pane_subtitle = f'{self._pane_subtitle}, {text}'
 
     def pane_subtitle(self) -> str:
         if not self._pane_subtitle:
@@ -710,7 +706,7 @@ class LogPane(WindowPane):
         logger_names = self._pane_subtitle.split(', ')
         additional_text = ''
         if len(logger_names) > 1:
-            additional_text = ' + {} more'.format(len(logger_names))
+            additional_text = f' + {len(logger_names)} more'
 
         return logger_names[0] + additional_text
 

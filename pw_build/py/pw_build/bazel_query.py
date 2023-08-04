@@ -68,7 +68,7 @@ class BazelRule:
             self._package = parts[0][2:]
             self._target = parts[1]
         else:
-            self._package = str(label)[2:]
+            self._package = label[2:]
             self._target = PurePosixPath(label).name
         self._kind = kind
 

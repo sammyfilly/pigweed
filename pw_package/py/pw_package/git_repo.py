@@ -81,7 +81,7 @@ class GitRepo(pw_package.package_manager.Package):
             )
             if not host.endswith('.googlesource.com'):
                 host += '.googlesource.com'
-            remote = 'https://{}{}'.format(host, url.path)
+            remote = f'https://{host}{url.path}'
         if remote != self._url:
             _LOG.debug(
                 "%s: remote doesn't match expected %s actual %s",

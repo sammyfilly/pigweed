@@ -79,9 +79,7 @@ def colorize_diff_line(line: str) -> str:
         return _COLOR.red(line)
     if line.startswith('+'):
         return _COLOR.green(line)
-    if line.startswith('@@ '):
-        return _COLOR.cyan(line)
-    return line
+    return _COLOR.cyan(line) if line.startswith('@@ ') else line
 
 
 def colorize_diff(lines: Iterable[str]) -> str:
@@ -127,8 +125,7 @@ def _check_files(
     errors = {}
 
     for path in files:
-        difference = _diff_formatted(path, formatter, dry_run)
-        if difference:
+        if difference := _diff_formatted(path, formatter, dry_run):
             errors[path] = difference
 
     return errors
@@ -269,7 +266,7 @@ def check_py_format_yapf(ctx: _Context) -> Dict[Path, str]:
             'yapf encountered an error:\n%s',
             process.stderr.decode(errors='replace').rstrip(),
         )
-        errors.update({file: '' for file in ctx.paths if file not in errors})
+        errors |= {file: '' for file in ctx.paths if file not in errors}
 
     return errors
 
@@ -282,13 +279,12 @@ def fix_py_format_yapf(ctx: _Context) -> Dict[Path, str]:
 
 def _enumerate_black_configs() -> Iterable[Path]:
     config = pw_env_setup.config_file.load()
-    black_config_file = (
+    if black_config_file := (
         config.get('pw', {})
         .get('pw_presubmit', {})
         .get('format', {})
         .get('black_config_file', {})
-    )
-    if black_config_file:
+    ):
         explicit_path = Path(black_config_file)
         if not explicit_path.is_file():
             raise ValueError(f'Black config file not found: {explicit_path}')
@@ -305,16 +301,20 @@ def _enumerate_black_configs() -> Iterable[Path]:
 
 
 def _black_config_args() -> Sequence[Union[str, Path]]:
-    config = None
-    for config_location in _enumerate_black_configs():
-        if config_location.is_file():
-            config = config_location
-            break
-
-    config_args: Sequence[Union[str, Path]] = ()
-    if config:
-        config_args = ('--config', config)
-    return config_args
+    return (
+        ('--config', config)
+        if (
+            config := next(
+                (
+                    config_location
+                    for config_location in _enumerate_black_configs()
+                    if config_location.is_file()
+                ),
+                None,
+            )
+        )
+        else ()
+    )
 
 
 def _black_multiple_files(ctx: _Context) -> Tuple[str, ...]:
@@ -329,7 +329,7 @@ def _black_multiple_files(ctx: _Context) -> Tuple[str, ...]:
         .splitlines()
     ):
         if match := re.search(r'^would reformat (.*)\s*$', line):
-            changed_paths.append(match.group(1))
+            changed_paths.append(match[1])
     return tuple(changed_paths)
 
 
@@ -715,7 +715,7 @@ class CodeFormatter:
 
         for code_format, files in self._formats.items():
             _LOG.debug('Checking %s', ', '.join(str(f) for f in files))
-            errors.update(code_format.check(self._context(code_format)))
+            errors |= code_format.check(self._context(code_format))
 
         return collections.OrderedDict(sorted(errors.items()))
 
@@ -723,18 +723,15 @@ class CodeFormatter:
         """Fixes format errors for supported files in place."""
         all_errors: Dict[Path, str] = {}
         for code_format, files in self._formats.items():
-            errors = code_format.fix(self._context(code_format))
-            if errors:
+            if errors := code_format.fix(self._context(code_format)):
                 for path, error in errors.items():
                     _LOG.error('Failed to format %s', path)
                     for line in error.splitlines():
                         _LOG.error('%s', line)
-                all_errors.update(errors)
+                all_errors |= errors
                 continue
 
-            _LOG.info(
-                'Formatted %s', plural(files, code_format.language + ' file')
-            )
+            _LOG.info('Formatted %s', plural(files, f'{code_format.language} file'))
         return all_errors
 
 
@@ -851,8 +848,7 @@ def format_files(
             _LOG.info(
                 'Applying formatting fixes to %d files', len(check_errors)
             )
-            fix_errors = formatter.fix()
-            if fix_errors:
+            if fix_errors := formatter.fix():
                 _LOG.info('Failed to apply formatting fixes')
                 print_format_check(fix_errors, show_fix_commands=False)
                 return 1

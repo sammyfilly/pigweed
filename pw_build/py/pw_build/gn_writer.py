@@ -173,8 +173,7 @@ class GnWriter:
             labels: The labels to resolve.
         """
         for label in labels:
-            repo = label.repo()
-            if repo:
+            if repo := label.repo():
                 label.resolve_repo(self.repos[repo])
             label = GnLabel(self.aliases.get(str(label), str(label)))
             yield target.make_relative(label)

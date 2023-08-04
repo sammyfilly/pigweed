@@ -130,7 +130,7 @@ class LogStore(logging.Handler):
         colors = pw_cli_colors(True)
         timestamp_prefix = colors.black_on_white('%(asctime)s') + ' '
         timestamp_format = '%Y%m%d %H:%M:%S'
-        format_string = timestamp_prefix + '%(levelname)s %(message)s'
+        format_string = f'{timestamp_prefix}%(levelname)s %(message)s'
         formatter = logging.Formatter(format_string, timestamp_format)
 
         self.setLevel(logging.DEBUG)

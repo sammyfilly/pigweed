@@ -67,7 +67,7 @@ def parse_defines(
         list of str NAME=VALUE or NAME for the component.
     """
     xpath = f'./components/component[@id="{component_id}"]/defines/define'
-    return list(_parse_define(define) for define in root.findall(xpath))
+    return [_parse_define(define) for define in root.findall(xpath)]
 
 
 def _parse_define(define: xml.etree.ElementTree.Element) -> str:
@@ -85,10 +85,7 @@ def _parse_define(define: xml.etree.ElementTree.Element) -> str:
     """
     name = define.attrib['name']
     value = define.attrib.get('value', None)
-    if value is None:
-        return name
-
-    return f'{name}={value}'
+    return name if value is None else f'{name}={value}'
 
 
 def parse_include_paths(
@@ -142,9 +139,7 @@ def _parse_include_path(
         Path, prefixed with `base_path`.
     """
     path = pathlib.Path(include_path.attrib['relative_path'])
-    if base_path is None:
-        return path
-    return base_path / path
+    return path if base_path is None else base_path / path
 
 
 def parse_headers(
@@ -314,11 +309,7 @@ def _parse_dependency(dependency: xml.etree.ElementTree.Element) -> List[str]:
         for subdependency in dependency:
             dependencies.extend(_parse_dependency(subdependency))
         return dependencies
-    if dependency.tag == 'any_of':
-        # Explicitly ignore.
-        return []
-
-    # Unknown dependency tag type.
+    # Explicitly ignore.
     return []
 
 
@@ -343,10 +334,10 @@ def check_dependencies(
         True if dependencies are satisfied, False if not.
     """
     xpath = f'./components/component[@id="{component_id}"]/dependencies/*'
-    for dependency in root.findall(xpath):
-        if not _check_dependency(dependency, include, exclude=exclude):
-            return False
-    return True
+    return all(
+        _check_dependency(dependency, include, exclude=exclude)
+        for dependency in root.findall(xpath)
+    )
 
 
 def _check_dependency(
@@ -373,10 +364,10 @@ def _check_dependency(
             exclude is not None and component_id in exclude
         )
     if dependency.tag == 'all':
-        for subdependency in dependency:
-            if not _check_dependency(subdependency, include, exclude=exclude):
-                return False
-        return True
+        return all(
+            _check_dependency(subdependency, include, exclude=exclude)
+            for subdependency in dependency
+        )
     if dependency.tag == 'any_of':
         for subdependency in dependency:
             if _check_dependency(subdependency, include, exclude=exclude):
@@ -417,7 +408,7 @@ def create_project(
     # dependencies.
     project_list = []
     pending_list = include
-    while len(pending_list) > 0:
+    while pending_list:
         component_id = pending_list.pop(0)
         if component_id in project_list:
             continue

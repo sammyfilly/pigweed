@@ -101,15 +101,15 @@ def highlight_matches(
     exploded_fragments = explode_text_fragments(line_fragments)
 
     def apply_highlighting(
-        fragments: StyleAndTextTuples, index: int, matching_regex_index: int = 0
-    ) -> None:
+            fragments: StyleAndTextTuples, index: int, matching_regex_index: int = 0
+        ) -> None:
         # Expand all fragments and apply the highlighting style.
         old_style, _text, *_ = fragments[index]
         # There are 6 fuzzy-highlight styles defined in style.py. Get an index
         # from 0-5 to use one style after the other in turn.
         style_index = matching_regex_index % 6
         fragments[index] = (
-            old_style + f' class:command-runner-fuzzy-highlight-{style_index} ',
+            f'{old_style} class:command-runner-fuzzy-highlight-{style_index} ',
             fragments[index][1],
         )
 
@@ -540,37 +540,25 @@ class CommandRunner:
         # Save the selected item handler. This is reset by self.close_dialog()
         handler = self.selected_item_handler
 
-        # Depending on what action is run, the command runner dialog may need to
-        # be closed, left open, or closed before running the selected action.
-        close_dialog = True
-        close_dialog_first = False
-
-        # Actions that launch new command runners, close_dialog should not run.
-        for command_text in [
-            '[File] > Insert Repl Snippet',
-            '[File] > Insert Repl History',
-            '[File] > Open Logger',
-        ]:
-            if command_text in self.selected_item_title:
-                close_dialog = False
-                break
-
-        # Actions that change what is in focus should be run after closing the
-        # command runner dialog.
-        for command_text in [
-            '[File] > Games > ',
-            '[View] > Focus Next Window/Tab',
-            '[View] > Focus Prev Window/Tab',
-            # All help menu entries open popup windows.
-            '[Help] > ',
-            # This focuses on a save dialog bor.
-            'Save/Export a copy',
-            '[Windows] > Floating ',
-        ]:
-            if command_text in self.selected_item_title:
-                close_dialog_first = True
-                break
-
+        close_dialog = all(
+            command_text not in self.selected_item_title
+            for command_text in [
+                '[File] > Insert Repl Snippet',
+                '[File] > Insert Repl History',
+                '[File] > Open Logger',
+            ]
+        )
+        close_dialog_first = any(
+            command_text in self.selected_item_title
+            for command_text in [
+                '[File] > Games > ',
+                '[View] > Focus Next Window/Tab',
+                '[View] > Focus Prev Window/Tab',
+                '[Help] > ',
+                'Save/Export a copy',
+                '[Windows] > Floating ',
+            ]
+        )
         # Close first if needed
         if close_dialog and close_dialog_first:
             self.close_dialog()

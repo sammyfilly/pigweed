@@ -144,9 +144,7 @@ def gn_python_test_coverage(ctx: PresubmitContext):
     coverage_omit_patterns = '--omit=*_pb2.py,*/setup.py'
 
     # Output coverage percentage summary to the terminal of changed files.
-    changed_python_files = list(
-        str(p) for p in ctx.paths if str(p).endswith('.py')
-    )
+    changed_python_files = [str(p) for p in ctx.paths if str(p).endswith('.py')]
     report_args = [
         'coverage',
         'report',
@@ -310,8 +308,8 @@ def _update_upstream_python_constraints(
                 constraint_hashes_tmp_out.read_text(
                     'utf-8', errors='replace'
                 ).splitlines(),
-                fromfile=str(constraint_hashes_original) + ' (original)',
-                tofile=str(constraint_hashes_original) + ' (updated)',
+                fromfile=f'{str(constraint_hashes_original)} (original)',
+                tofile=f'{str(constraint_hashes_original)} (updated)',
                 lineterm='',
                 n=1,
             )
@@ -326,7 +324,7 @@ def _update_upstream_python_constraints(
                 ).splitlines(),
                 fromfile=str(upstream_requirements_lock_original)
                 + ' (original)',
-                tofile=str(upstream_requirements_lock_original) + ' (updated)',
+                tofile=f'{str(upstream_requirements_lock_original)} (updated)',
                 lineterm='',
                 n=1,
             )

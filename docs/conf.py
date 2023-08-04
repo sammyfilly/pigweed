@@ -300,9 +300,7 @@ cpp_paren_attributes = [
 
 
 def do_not_skip_init(app, what, name, obj, would_skip, options):
-    if name == "__init__":
-        return False  # never skip __init__ functions
-    return would_skip
+    return False if name == "__init__" else would_skip
 
 
 # Problem: CSS files aren't copied after modifying them. Solution:

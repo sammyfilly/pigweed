@@ -131,11 +131,11 @@ def main(
 
     output = (
         '# Auto-generated requirements.txt from the following packages:\n#\n'
-    )
-    output += '\n'.join(
-        '# ' + pkg.gn_target_name
-        for pkg in sorted(
-            target_py_packages, key=lambda pkg: pkg.gn_target_name
+        + '\n'.join(
+            f'# {pkg.gn_target_name}'
+            for pkg in sorted(
+                target_py_packages, key=lambda pkg: pkg.gn_target_name
+            )
         )
     )
     output += '\n\n'

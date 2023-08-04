@@ -158,22 +158,14 @@ def _gn_combined_build_check_targets() -> Sequence[str]:
 
     # TODO(b/234645359): Re-enable on Windows when compatibility tests build.
     if sys.platform != 'win32':
-        build_targets.append('cpp14_compatibility')
-        build_targets.append('cpp20_compatibility')
-
+        build_targets.extend(('cpp14_compatibility', 'cpp20_compatibility'))
     # clang-tidy doesn't run on Windows.
     if sys.platform != 'win32':
         build_targets.append('static_analysis')
 
     # QEMU doesn't run on Windows.
     if sys.platform != 'win32':
-        # TODO(b/244604080): For the pw::InlineString tests, qemu_*_debug
-        #     and qemu_*_speed_optimized produce a binary too large for the
-        #     QEMU target's 256KB flash. Restore debug and speed optimized
-        #     builds when this is fixed.
-        build_targets.append('qemu_gcc_size_optimized')
-        build_targets.append('qemu_clang_size_optimized')
-
+        build_targets.extend(('qemu_gcc_size_optimized', 'qemu_clang_size_optimized'))
     # TODO(b/240982565): SocketStream currently requires Linux.
     if sys.platform.startswith('linux'):
         build_targets.append('integration_tests')
@@ -225,9 +217,7 @@ gn_emboss_build = build.GnGenNinja(
     name='gn_emboss_build',
     packages=('emboss',),
     gn_args=dict(
-        dir_pw_third_party_emboss=lambda ctx: '"{}"'.format(
-            ctx.package_root / 'emboss'
-        ),
+        dir_pw_third_party_emboss=lambda ctx: f""""{ctx.package_root / 'emboss'}\"""",
         pw_C_OPTIMIZATION_LEVELS=_OPTIMIZATION_LEVELS,
     ),
     ninja_targets=(*_at_all_optimization_levels(f'host_{_HOST_COMPILER}'),),
@@ -238,9 +228,7 @@ gn_nanopb_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('nanopb',),
     gn_args=dict(
-        dir_pw_third_party_nanopb=lambda ctx: '"{}"'.format(
-            ctx.package_root / 'nanopb'
-        ),
+        dir_pw_third_party_nanopb=lambda ctx: f""""{ctx.package_root / 'nanopb'}\"""",
         pw_C_OPTIMIZATION_LEVELS=_OPTIMIZATION_LEVELS,
     ),
     ninja_targets=(
@@ -254,12 +242,8 @@ gn_emboss_nanopb_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('emboss', 'nanopb'),
     gn_args=dict(
-        dir_pw_third_party_emboss=lambda ctx: '"{}"'.format(
-            ctx.package_root / 'emboss'
-        ),
-        dir_pw_third_party_nanopb=lambda ctx: '"{}"'.format(
-            ctx.package_root / 'nanopb'
-        ),
+        dir_pw_third_party_emboss=lambda ctx: f""""{ctx.package_root / 'emboss'}\"""",
+        dir_pw_third_party_nanopb=lambda ctx: f""""{ctx.package_root / 'nanopb'}\"""",
         pw_C_OPTIMIZATION_LEVELS=_OPTIMIZATION_LEVELS,
     ),
     ninja_targets=(
@@ -273,15 +257,9 @@ gn_crypto_mbedtls_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('mbedtls',),
     gn_args={
-        'dir_pw_third_party_mbedtls': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'mbedtls'
-        ),
-        'pw_crypto_SHA256_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'pw_crypto:sha256_mbedtls_v3'
-        ),
-        'pw_crypto_ECDSA_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'pw_crypto:ecdsa_mbedtls_v3'
-        ),
+        'dir_pw_third_party_mbedtls': lambda ctx: f""""{ctx.package_root / 'mbedtls'}\"""",
+        'pw_crypto_SHA256_BACKEND': lambda ctx: f""""{ctx.root / 'pw_crypto:sha256_mbedtls_v3'}\"""",
+        'pw_crypto_ECDSA_BACKEND': lambda ctx: f""""{ctx.root / 'pw_crypto:ecdsa_mbedtls_v3'}\"""",
         'pw_C_OPTIMIZATION_LEVELS': _OPTIMIZATION_LEVELS,
     },
     ninja_targets=(
@@ -296,12 +274,8 @@ gn_crypto_micro_ecc_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('micro-ecc',),
     gn_args={
-        'dir_pw_third_party_micro_ecc': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'micro-ecc'
-        ),
-        'pw_crypto_ECDSA_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'pw_crypto:ecdsa_uecc'
-        ),
+        'dir_pw_third_party_micro_ecc': lambda ctx: f""""{ctx.package_root / 'micro-ecc'}\"""",
+        'pw_crypto_ECDSA_BACKEND': lambda ctx: f""""{ctx.root / 'pw_crypto:ecdsa_uecc'}\"""",
         'pw_C_OPTIMIZATION_LEVELS': _OPTIMIZATION_LEVELS,
     },
     ninja_targets=(
@@ -316,9 +290,7 @@ gn_teensy_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('teensy',),
     gn_args={
-        'pw_arduino_build_CORE_PATH': lambda ctx: '"{}"'.format(
-            str(ctx.package_root)
-        ),
+        'pw_arduino_build_CORE_PATH': lambda ctx: f'"{str(ctx.package_root)}"',
         'pw_arduino_build_CORE_NAME': 'teensy',
         'pw_arduino_build_PACKAGE_NAME': 'avr/1.58.1',
         'pw_arduino_build_BOARD': 'teensy40',
@@ -332,9 +304,7 @@ gn_pico_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('pico_sdk',),
     gn_args={
-        'PICO_SRC_DIR': lambda ctx: '"{}"'.format(
-            str(ctx.package_root / 'pico_sdk')
-        ),
+        'PICO_SRC_DIR': lambda ctx: f""""{str(ctx.package_root / 'pico_sdk')}\"""",
         'pw_C_OPTIMIZATION_LEVELS': _OPTIMIZATION_LEVELS,
     },
     ninja_targets=('pi_pico',),
@@ -345,9 +315,7 @@ gn_mimxrt595_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('mcuxpresso',),
     gn_args={
-        'dir_pw_third_party_mcuxpresso': lambda ctx: '"{}"'.format(
-            str(ctx.package_root / 'mcuxpresso')
-        ),
+        'dir_pw_third_party_mcuxpresso': lambda ctx: f""""{str(ctx.package_root / 'mcuxpresso')}\"""",
         'pw_target_mimxrt595_evk_MANIFEST': '$dir_pw_third_party_mcuxpresso'
         + '/EVK-MIMXRT595_manifest_v3_8.xml',
         'pw_third_party_mcuxpresso_SDK': '//targets/mimxrt595_evk:sample_sdk',
@@ -361,15 +329,9 @@ gn_mimxrt595_freertos_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('freertos', 'mcuxpresso'),
     gn_args={
-        'dir_pw_third_party_freertos': lambda ctx: '"{}"'.format(
-            str(ctx.package_root / 'freertos')
-        ),
-        'dir_pw_third_party_mcuxpresso': lambda ctx: '"{}"'.format(
-            str(ctx.package_root / 'mcuxpresso')
-        ),
-        'pw_target_mimxrt595_evk_freertos_MANIFEST': '{}/{}'.format(
-            "$dir_pw_third_party_mcuxpresso", "EVK-MIMXRT595_manifest_v3_8.xml"
-        ),
+        'dir_pw_third_party_freertos': lambda ctx: f""""{str(ctx.package_root / 'freertos')}\"""",
+        'dir_pw_third_party_mcuxpresso': lambda ctx: f""""{str(ctx.package_root / 'mcuxpresso')}\"""",
+        'pw_target_mimxrt595_evk_freertos_MANIFEST': '$dir_pw_third_party_mcuxpresso/EVK-MIMXRT595_manifest_v3_8.xml',
         'pw_third_party_mcuxpresso_SDK': '//targets/mimxrt595_evk_freertos:sdk',
         'pw_C_OPTIMIZATION_LEVELS': _OPTIMIZATION_LEVELS,
     },
@@ -381,24 +343,12 @@ gn_software_update_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('nanopb', 'protobuf', 'mbedtls', 'micro-ecc'),
     gn_args={
-        'dir_pw_third_party_protobuf': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'protobuf'
-        ),
-        'dir_pw_third_party_nanopb': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'nanopb'
-        ),
-        'dir_pw_third_party_micro_ecc': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'micro-ecc'
-        ),
-        'pw_crypto_ECDSA_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'pw_crypto:ecdsa_uecc'
-        ),
-        'dir_pw_third_party_mbedtls': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'mbedtls'
-        ),
-        'pw_crypto_SHA256_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'pw_crypto:sha256_mbedtls_v3'
-        ),
+        'dir_pw_third_party_protobuf': lambda ctx: f""""{ctx.package_root / 'protobuf'}\"""",
+        'dir_pw_third_party_nanopb': lambda ctx: f""""{ctx.package_root / 'nanopb'}\"""",
+        'dir_pw_third_party_micro_ecc': lambda ctx: f""""{ctx.package_root / 'micro-ecc'}\"""",
+        'pw_crypto_ECDSA_BACKEND': lambda ctx: f""""{ctx.root / 'pw_crypto:ecdsa_uecc'}\"""",
+        'dir_pw_third_party_mbedtls': lambda ctx: f""""{ctx.package_root / 'mbedtls'}\"""",
+        'pw_crypto_SHA256_BACKEND': lambda ctx: f""""{ctx.root / 'pw_crypto:sha256_mbedtls_v3'}\"""",
         'pw_C_OPTIMIZATION_LEVELS': _OPTIMIZATION_LEVELS,
     },
     ninja_targets=_at_all_optimization_levels('host_clang'),
@@ -409,18 +359,10 @@ gn_pw_system_demo_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('freertos', 'nanopb', 'stm32cube_f4', 'pico_sdk'),
     gn_args={
-        'dir_pw_third_party_freertos': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'freertos'
-        ),
-        'dir_pw_third_party_nanopb': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'nanopb'
-        ),
-        'dir_pw_third_party_stm32cube_f4': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'stm32cube_f4'
-        ),
-        'PICO_SRC_DIR': lambda ctx: '"{}"'.format(
-            str(ctx.package_root / 'pico_sdk')
-        ),
+        'dir_pw_third_party_freertos': lambda ctx: f""""{ctx.package_root / 'freertos'}\"""",
+        'dir_pw_third_party_nanopb': lambda ctx: f""""{ctx.package_root / 'nanopb'}\"""",
+        'dir_pw_third_party_stm32cube_f4': lambda ctx: f""""{ctx.package_root / 'stm32cube_f4'}\"""",
+        'PICO_SRC_DIR': lambda ctx: f""""{str(ctx.package_root / 'pico_sdk')}\"""",
     },
     ninja_targets=('pw_system_demo',),
 )
@@ -430,15 +372,9 @@ gn_googletest_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('googletest',),
     gn_args={
-        'dir_pw_third_party_googletest': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'googletest'
-        ),
-        'pw_unit_test_MAIN': lambda ctx: '"{}"'.format(
-            ctx.root / 'third_party/googletest:gmock_main'
-        ),
-        'pw_unit_test_GOOGLETEST_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'third_party/googletest'
-        ),
+        'dir_pw_third_party_googletest': lambda ctx: f""""{ctx.package_root / 'googletest'}\"""",
+        'pw_unit_test_MAIN': lambda ctx: f""""{ctx.root / 'third_party/googletest:gmock_main'}\"""",
+        'pw_unit_test_GOOGLETEST_BACKEND': lambda ctx: f""""{ctx.root / 'third_party/googletest'}\"""",
         'pw_C_OPTIMIZATION_LEVELS': _OPTIMIZATION_LEVELS,
     },
     ninja_targets=_at_all_optimization_levels(f'host_{_HOST_COMPILER}'),
@@ -449,24 +385,12 @@ gn_fuzz_build = build.GnGenNinja(
     path_filter=_BUILD_FILE_FILTER,
     packages=('abseil-cpp', 'fuzztest', 'googletest', 're2'),
     gn_args={
-        'dir_pw_third_party_abseil_cpp': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'abseil-cpp'
-        ),
-        'dir_pw_third_party_fuzztest': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'fuzztest'
-        ),
-        'dir_pw_third_party_googletest': lambda ctx: '"{}"'.format(
-            ctx.package_root / 'googletest'
-        ),
-        'dir_pw_third_party_re2': lambda ctx: '"{}"'.format(
-            ctx.package_root / 're2'
-        ),
-        'pw_unit_test_MAIN': lambda ctx: '"{}"'.format(
-            ctx.root / 'third_party/googletest:gmock_main'
-        ),
-        'pw_unit_test_GOOGLETEST_BACKEND': lambda ctx: '"{}"'.format(
-            ctx.root / 'third_party/googletest'
-        ),
+        'dir_pw_third_party_abseil_cpp': lambda ctx: f""""{ctx.package_root / 'abseil-cpp'}\"""",
+        'dir_pw_third_party_fuzztest': lambda ctx: f""""{ctx.package_root / 'fuzztest'}\"""",
+        'dir_pw_third_party_googletest': lambda ctx: f""""{ctx.package_root / 'googletest'}\"""",
+        'dir_pw_third_party_re2': lambda ctx: f""""{ctx.package_root / 're2'}\"""",
+        'pw_unit_test_MAIN': lambda ctx: f""""{ctx.root / 'third_party/googletest:gmock_main'}\"""",
+        'pw_unit_test_GOOGLETEST_BACKEND': lambda ctx: f""""{ctx.root / 'third_party/googletest'}\"""",
     },
     ninja_targets=('host_clang_fuzz',),
     ninja_contexts=(
@@ -559,10 +483,7 @@ gn_host_tools = build.GnGenNinja(
 def _run_cmake(ctx: PresubmitContext, toolchain='host_clang') -> None:
     build.install_package(ctx, 'nanopb')
 
-    env = None
-    if 'clang' in toolchain:
-        env = build.env_with_clang_vars()
-
+    env = build.env_with_clang_vars() if 'clang' in toolchain else None
     toolchain_path = ctx.root / 'pw_toolchain' / toolchain / 'toolchain.cmake'
     build.cmake(
         ctx,
@@ -909,11 +830,10 @@ def source_is_in_cmake_build_warn_only(ctx: PresubmitContext):
     """Checks that source files are in the CMake build."""
 
     _run_cmake(ctx)
-    missing = build.check_compile_commands_for_files(
+    if missing := build.check_compile_commands_for_files(
         ctx.output_dir / 'compile_commands.json',
         (f for f in ctx.paths if f.suffix in format_code.CPP_SOURCE_EXTS),
-    )
-    if missing:
+    ):
         _LOG.warning(
             'Files missing from CMake:\n%s',
             '\n'.join(str(f) for f in missing),
@@ -1010,11 +930,11 @@ def commit_message_format(_: PresubmitContext):
             lines[0],
         )
         errors += 1
-    elif not _valid_capitalization(match.group('desc').split()[0]):
+    elif not _valid_capitalization(match['desc'].split()[0]):
         _LOG.warning(
             'The first word after the ":" in the first line ("%s") must be '
             'capitalized:\n  %s',
-            match.group('desc').split()[0],
+            match['desc'].split()[0],
             lines[0],
         )
         errors += 1

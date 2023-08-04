@@ -121,10 +121,7 @@ class GnTarget:  # pylint: disable=too-many-instance-attributes
 
         # Translate Bazel kind to GN target type.
         if kind == 'cc_library':
-            if linkstatic:
-                self._type = 'pw_static_library'
-            else:
-                self._type = 'pw_source_set'
+            self._type = 'pw_static_library' if linkstatic else 'pw_source_set'
         else:
             raise MalformedGnError(f'unsupported Bazel kind: {kind}')
 
@@ -288,8 +285,7 @@ class GnTarget:  # pylint: disable=too-many-instance-attributes
             Same as `GnLabel.__init__`.
         """
         dep = GnLabel(self._base_label, **kwargs)
-        repo = dep.repo()
-        if repo:
+        if repo := dep.repo():
             self._repos.add(repo)
         if dep.public():
             self.public_deps.add(dep)

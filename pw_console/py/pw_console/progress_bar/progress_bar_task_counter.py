@@ -22,8 +22,7 @@ from prompt_toolkit.shortcuts.progress_bar import ProgressBarCounter
 
 def _redraw_ui() -> None:
     """Signal the prompt_toolkit app to re-draw"""
-    pt_app = get_app_or_none()
-    if pt_app:
+    if pt_app := get_app_or_none():
         pt_app.invalidate()
 
 

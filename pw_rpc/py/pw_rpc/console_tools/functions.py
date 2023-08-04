@@ -28,17 +28,13 @@ def _annotation_name(annotation: object) -> str:
 def format_parameter(param: inspect.Parameter) -> str:
     """Formats a parameter for printing in a function signature."""
     if param.kind == param.VAR_POSITIONAL:
-        name = '*' + param.name
+        name = f'*{param.name}'
     elif param.kind == param.VAR_KEYWORD:
-        name = '**' + param.name
+        name = f'**{param.name}'
     else:
         name = param.name
 
-    if param.default is param.empty:
-        default = ''
-    else:
-        default = f' = {param.default}'
-
+    default = '' if param.default is param.empty else f' = {param.default}'
     if param.annotation is param.empty:
         annotation = ''
     else:
@@ -58,9 +54,7 @@ def format_signature(name: str, signature: inspect.Signature) -> str:
     if signature.return_annotation is signature.empty:
         return_annotation = ''
     else:
-        return_annotation = ' -> ' + _annotation_name(
-            signature.return_annotation
-        )
+        return_annotation = f' -> {_annotation_name(signature.return_annotation)}'
 
     return f'{name}({params}){return_annotation}'
 

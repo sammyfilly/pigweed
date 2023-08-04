@@ -57,7 +57,7 @@ def copy_wheels(prefix: Path, suffix_file: Path, out_dir: Path) -> None:
     if not out_dir.exists():
         out_dir.mkdir()
 
-    copied_files: Dict[str, Path] = dict()
+    copied_files: Dict[str, Path] = {}
     requirements_content: str = ''
 
     for suffix in suffix_file.read_text().splitlines():

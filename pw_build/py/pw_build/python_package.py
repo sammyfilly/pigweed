@@ -114,10 +114,7 @@ class PythonPackage:
 
     @property
     def setup_dir(self) -> Optional[Path]:
-        if not self.setup_sources:
-            return None
-        # Assuming all setup_source files live in the same parent directory.
-        return self.setup_sources[0].parent
+        return None if not self.setup_sources else self.setup_sources[0].parent
 
     @property
     def setup_py(self) -> Path:
@@ -137,9 +134,7 @@ class PythonPackage:
             for setup_file in self.setup_sources
             if str(setup_file).endswith('setup.cfg')
         ]
-        if len(setup_cfg) < 1:
-            return None
-        return setup_cfg[0]
+        return None if not setup_cfg else setup_cfg[0]
 
     def as_dict(self) -> Dict[Any, Any]:
         """Return a dict representation of this class."""
@@ -168,8 +163,7 @@ class PythonPackage:
                     unknown_package_message + _pretty_format(self.as_dict())
                 )
             return name
-        top_level_source_dir = self.top_level_source_dir
-        if top_level_source_dir:
+        if top_level_source_dir := self.top_level_source_dir:
             return top_level_source_dir.name
 
         actual_gn_target_name = self.gn_target_name.split(':')
@@ -195,29 +189,21 @@ class PythonPackage:
     def package_dir(self) -> Path:
         if self.setup_cfg and self.setup_cfg.is_file():
             return self.setup_cfg.parent / self.package_name
-        root_source_dir = self.top_level_source_dir
-        if root_source_dir:
+        if root_source_dir := self.top_level_source_dir:
             return root_source_dir
-        if self.sources:
-            return self.sources[0].parent
-        # If no sources available, assume the setup file root is the
-        # package_dir. This may be the case in a package with data files only.
-        return self.setup_sources[0].parent
+        return self.sources[0].parent if self.sources else self.setup_sources[0].parent
 
     @property
     def top_level_source_dir(self) -> Optional[Path]:
         source_dir_paths = sorted(
-            set((len(sfile.parts), sfile.parent) for sfile in self.sources),
+            {(len(sfile.parts), sfile.parent) for sfile in self.sources},
             key=lambda s: s[1],
         )
         if not source_dir_paths:
             return None
 
         top_level_source_dir = source_dir_paths[0][1]
-        if not top_level_source_dir.is_dir():
-            return None
-
-        return top_level_source_dir
+        return None if not top_level_source_dir.is_dir() else top_level_source_dir
 
     def _load_config(self) -> Optional[configparser.ConfigParser]:
         config = configparser.ConfigParser()

@@ -53,7 +53,7 @@ class TestProjectBuilderPrefs(unittest.TestCase):
         )
         # Construct an expected result config.
         expected_config: Dict[Any, Any] = {}
-        expected_config.update(_DEFAULT_CONFIG)
+        expected_config |= _DEFAULT_CONFIG
         expected_config.update(
             load_defaults_from_argparse(add_project_builder_arguments)
         )
@@ -79,7 +79,7 @@ class TestProjectBuilderPrefs(unittest.TestCase):
 
         # Construct an expected result config.
         expected_config: Dict[Any, Any] = copy.copy(_DEFAULT_CONFIG)
-        expected_config.update(defaults_from_argparse)
+        expected_config |= defaults_from_argparse
 
         # pylint: disable=protected-access
         prefs._update_config = MagicMock(  # type: ignore

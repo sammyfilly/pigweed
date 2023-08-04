@@ -206,7 +206,7 @@ class TestLogStreamDecoderDecodingFunctionality(TestLogStreamDecoderBase):
         expected_log = Log(
             message=message,
             module_name=module_name,
-            file_and_line=file + ':123',
+            file_and_line=f'{file}:123',
             level=logging.INFO,
             source_name=self.decoder.source_name,
             timestamp='0:00',
@@ -252,7 +252,7 @@ class TestLogStreamDecoderDecodingFunctionality(TestLogStreamDecoderBase):
         expected_log = Log(
             message=message,
             module_name=module,
-            file_and_line=file + ':123',
+            file_and_line=f'{file}:123',
             level=logging.INFO,
             source_name=self.decoder.source_name,
             timestamp='0:00',
@@ -712,14 +712,7 @@ class TestLogStreamDecoderDecodingFunctionality(TestLogStreamDecoderBase):
         self.assertEqual(test_logger.log_calls[0].level, test_log.level)
         self.assertEqual(
             test_logger.log_calls[0].message,
-            '[%s] %s %s %s %s'
-            % (
-                test_log.source_name,
-                test_log.module_name,
-                test_log.timestamp,
-                test_log.message,
-                test_log.file_and_line,
-            ),
+            f'[{test_log.source_name}] {test_log.module_name} {test_log.timestamp} {test_log.message} {test_log.file_and_line}',
         )
         self.assertEqual(
             test_logger.log_calls[0].kwargs['extra']['extra_metadata_fields'],

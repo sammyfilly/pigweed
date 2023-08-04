@@ -151,19 +151,12 @@ def flattened_rpc_completions(
     """
     rpc_list = list(
         chain.from_iterable(
-            [
-                '{}.rpcs.{}'.format(c.name, a.full_name)
-                for a in c.rpc_client.methods()
-            ]
+            [f'{c.name}.rpcs.{a.full_name}' for a in c.rpc_client.methods()]
             for c in client_info_list
         )
     )
 
-    # Dict should contain completion text as keys and descriptions as values.
-    custom_word_completions = {
-        flattened_rpc_name: 'RPC' for flattened_rpc_name in rpc_list
-    }
-    return custom_word_completions
+    return {flattened_rpc_name: 'RPC' for flattened_rpc_name in rpc_list}
 
 
 class Context:
@@ -220,7 +213,7 @@ class Context:
         )
 
         # Make the RPC clients and protos available in the console.
-        self._variables.update((c.name, c.client) for c in self.client_info)
+        self._variables |= ((c.name, c.client) for c in self.client_info)
 
         # Make the proto package hierarchy directly available in the console.
         for package in self.protos.packages:

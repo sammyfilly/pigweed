@@ -79,7 +79,7 @@ def add_defaults(kwargs):
 
 def _preprocess_linker_script_impl(ctx):
     cc_toolchain = find_cpp_toolchain(ctx)
-    output_script = ctx.actions.declare_file(ctx.label.name + ".ld")
+    output_script = ctx.actions.declare_file(f"{ctx.label.name}.ld")
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
@@ -106,24 +106,30 @@ def _preprocess_linker_script_impl(ctx):
         variables = c_compile_variables,
     )
     ctx.actions.run(
-        outputs = [output_script],
-        inputs = depset(
+        outputs=[output_script],
+        inputs=depset(
             [ctx.file.linker_script],
-            transitive = [cc_toolchain.all_files],
+            transitive=[cc_toolchain.all_files],
         ),
-        executable = cxx_compiler_path,
-        arguments = [
-            "-E",
-            "-P",
-            "-xc",
-            ctx.file.linker_script.short_path,
-            "-o",
-            output_script.path,
-        ] + [
-            "-D" + d
-            for d in ctx.attr.defines
-        ] + action_flags + ctx.attr.copts,
-        env = env,
+        executable=cxx_compiler_path,
+        arguments=(
+            (
+                (
+                    [
+                        "-E",
+                        "-P",
+                        "-xc",
+                        ctx.file.linker_script.short_path,
+                        "-o",
+                        output_script.path,
+                    ]
+                    + [f"-D{d}" for d in ctx.attr.defines]
+                )
+                + action_flags
+            )
+            + ctx.attr.copts
+        ),
+        env=env,
     )
     linker_input = cc_common.create_linker_input(
         owner = ctx.label,

@@ -71,7 +71,7 @@ class _Action(object):  # pylint: disable=useless-object-inheritance
     def accept(self, visitor):
         del visitor
         raise AcceptNotOverridden(
-            'accept() not overridden for {}'.format(self.__class__.__name__)
+            f'accept() not overridden for {self.__class__.__name__}'
         )
 
     def write_deactivate(
@@ -134,9 +134,7 @@ class _VariableAction(_Action):
             env.pop(self.name, None)
 
     def __repr__(self):
-        return '{}({}, {})'.format(
-            self.__class__.__name__, self.name, self.value
-        )
+        return f'{self.__class__.__name__}({self.name}, {self.value})'
 
 
 class Set(_VariableAction):
@@ -176,7 +174,7 @@ class BadVariableValue(ValueError):
 
 def _append_prepend_check(action):
     if '=' in action.value:
-        raise BadVariableValue('"{}" contains "="'.format(action.value))
+        raise BadVariableValue(f'"{action.value}" contains "="')
 
 
 class Prepend(_VariableAction):
@@ -228,7 +226,7 @@ class Echo(_Action):
         visitor.visit_echo(self)
 
     def __repr__(self):
-        return 'Echo({}, newline={})'.format(self.value, self.newline)
+        return f'Echo({self.value}, newline={self.newline})'
 
 
 class Comment(_Action):
@@ -242,7 +240,7 @@ class Comment(_Action):
         visitor.visit_comment(self)
 
     def __repr__(self):
-        return 'Comment({})'.format(self.value)
+        return f'Comment({self.value})'
 
 
 class Command(_Action):
@@ -259,7 +257,7 @@ class Command(_Action):
         visitor.visit_command(self)
 
     def __repr__(self):
-        return 'Command({})'.format(self.command)
+        return f'Command({self.command})'
 
 
 class Doctor(Command):
@@ -295,7 +293,7 @@ class Function(_Action):
         visitor.visit_function(self)
 
     def __repr__(self):
-        return 'Function({}, {})'.format(self.name, self.body)
+        return f'Function({self.name}, {self.body})'
 
 
 class Hash(_Action):
@@ -338,12 +336,8 @@ class Environment(object):
 
     def normalize_key(self, name):
         if self._allcaps:
-            try:
+            with contextlib.suppress(AttributeError):
                 return name.upper()
-            except AttributeError:
-                # The _Action class has code to handle incorrect types, so
-                # we just ignore this error here.
-                pass
         return name
 
     # A newline is printed after each high-level operation. Top-level

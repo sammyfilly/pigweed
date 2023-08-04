@@ -175,7 +175,7 @@ class PigweedIdeSettings(YamlConfigLoaderMixin):
         with that name in its output directory. So that becomes the canonical
         name for the target.
         """
-        return self._config.get('targets', list())
+        return self._config.get('targets', [])
 
     @property
     def target_inference(self) -> str:
@@ -249,7 +249,7 @@ class PigweedIdeSettings(YamlConfigLoaderMixin):
         configuration without the risk of putting those features in a bad or
         unexpected state.
         """
-        return self._config.get('sync', list())
+        return self._config.get('sync', [])
 
     @property
     def clangd_additional_query_drivers(self) -> List[str]:
@@ -260,7 +260,7 @@ class PigweedIdeSettings(YamlConfigLoaderMixin):
         Pigweed, you should include path globs to your toolchains here. These
         paths will be given higher priority than the Pigweed toolchain paths.
         """
-        return self._config.get('clangd_additional_query_drivers', list())
+        return self._config.get('clangd_additional_query_drivers', [])
 
     def clangd_query_drivers(self) -> List[str]:
         drivers = [
@@ -343,23 +343,21 @@ def _docstring_set_default(
     default value of a property. But we can use this function to add it
     separately.
     """
-    if obj.__doc__ is not None:
-        default = str(default)
+    if obj.__doc__ is None:
+        return
+    default = str(default)
 
-        if literal:
-            lines = default.splitlines()
-
-            if len(lines) == 0:
-                return
-            if len(lines) == 1:
-                default = f'Default: ``{lines[0]}``'
-            else:
-                default = 'Default:\n\n.. code-block::\n\n  ' + '\n  '.join(
-                    lines
-                )
-
-        doc = cast(str, obj.__doc__)
-        obj.__doc__ = f'{cleandoc(doc)}\n\n{default}'
+    if literal:
+        if lines := default.splitlines():
+            default = (
+                f'Default: ``{lines[0]}``'
+                if len(lines) == 1
+                else 'Default:\n\n.. code-block::\n\n  ' + '\n  '.join(lines)
+            )
+        else:
+            return
+    doc = cast(str, obj.__doc__)
+    obj.__doc__ = f'{cleandoc(doc)}\n\n{default}'
 
 
 _docstring_set_default(

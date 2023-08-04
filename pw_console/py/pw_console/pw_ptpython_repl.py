@@ -63,11 +63,10 @@ def _wrapped_find_plugin_styles():
 
     This allows using these themes without requiring Python entrypoints.
     """
-    for style in [
+    yield from [
         ('pigweed-code', PigweedCodeStyle),
         ('pigweed-code-light', PigweedCodeLightStyle),
-    ]:
-        yield style
+    ]
     yield from _original_find_plugin_styles()
 
 

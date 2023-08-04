@@ -216,10 +216,8 @@ class GnGenerator:
 
         def count_packages(config: GnConfig) -> int:
             return sum(
-                [
-                    any(config.within(target.config) for target in targets)
-                    for _package, targets in self.targets.items()
-                ]
+                any(config.within(target.config) for target in targets)
+                for _package, targets in self.targets.items()
             )
 
         common = list(
@@ -278,9 +276,7 @@ class GnGenerator:
         """
         build_gn.write_imports(['//build_overrides/pigweed.gni'])
         build_gn.write_blank()
-        imports = set()
-        imports.add('$dir_pw_build/target_types.gni')
-
+        imports = {'$dir_pw_build/target_types.gni'}
         if not package:
             imports.add('$dir_pw_docgen/docs.gni')
         for repo in self._repos[package]:

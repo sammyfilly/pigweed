@@ -64,14 +64,7 @@ def _evaluate_env_in_shell(env):
         temp_name = temp.name
 
     # Evaluate env sourcing script and capture output of 'env'.
-    if os.name == 'nt':
-        # On Windows you just run batch files and they modify your
-        # environment, no need to call 'source' or '.'.
-        cmd = '{} && set'.format(temp_name)
-    else:
-        # Using '.' instead of 'source' because 'source' is not POSIX.
-        cmd = '. {} && env'.format(temp_name)
-
+    cmd = f'{temp_name} && set' if os.name == 'nt' else f'. {temp_name} && env'
     res = subprocess.run(cmd, capture_output=True, shell=True)
     if res.returncode:
         raise WrittenEnvFailure(res.stderr)

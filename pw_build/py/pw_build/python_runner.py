@@ -17,6 +17,7 @@ This script evaluates expressions in the Python command's arguments then invokes
 the command.
 """
 
+
 import argparse
 import atexit
 import json
@@ -33,7 +34,7 @@ from typing import List, Optional, Tuple
 try:
     from pw_build import gn_resolver
     from pw_build.python_package import load_packages
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     # Load from python_package from this directory if pw_build is not available.
     from python_package import load_packages  # type: ignore
     import gn_resolver  # type: ignore
@@ -149,10 +150,7 @@ def acquire_lock(lockfile: Path, exclusive: bool):
         return
 
     start_time = time.monotonic()
-    if exclusive:
-        lock_type = fcntl.LOCK_EX  # type: ignore[name-defined]
-    else:
-        lock_type = fcntl.LOCK_SH  # type: ignore[name-defined]
+    lock_type = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
     fd = os.open(lockfile, os.O_RDWR | os.O_CREAT)
 
     # Make sure we close the file when the process exits. If we manage to
@@ -268,15 +266,10 @@ def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-local
     if module is not None:
         command += ['-m', module]
 
-    run_args: dict = dict()
-    # Always inherit the environtment by default. If PYTHONPATH or VIRTUALENV is
-    # set below then the environment vars must be copied in or subprocess.run
-    # will run with only the new updated variables.
-    run_args['env'] = os.environ.copy()
-
+    run_args: dict = {'env': os.environ.copy()}
     if env is not None:
         environment = os.environ.copy()
-        environment.update((k, v) for k, v in (a.split('=', 1) for a in env))
+        environment |= ((k, v) for k, v in (a.split('=', 1) for a in env))
         run_args['env'] = environment
 
     script_command = original_cmd[0]
