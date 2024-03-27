@@ -15,7 +15,7 @@
     "@codemirror/theme-one-dark": "^6.0.0",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
-    "@mui/material": "^5.9.3",
+    "@mui/material": "^5.15.12",
     "codemirror": "^6.0.1",
     "next": "12.2.3",
     "object-path": "^0.11.8",
