@@ -10,10 +10,10 @@
         "lint": "eslint --max-warnings=0 src"
     },
     "dependencies": {
-        "@lit-labs/virtualizer": "^2.0.3",
-        "@material/web": "^1.0.0-pre.8",
+        "@lit-labs/virtualizer": "^2.0.14",
+        "@material/web": "^1.5.1",
         "date-fns": "^2.30.0",
-        "lit": "^3.0.0-pre.0",
+        "lit": "^3.2.0",
         "peggy": "^3.0.2",
         "prettier-plugin-jsdoc": "^0.4.2"
     },
